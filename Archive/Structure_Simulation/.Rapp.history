@@ -1,0 +1,1211 @@
+summary(lm10)
+## Structure simulation using a rank-3 matrix, lambda = 590, lambda1=550, normalize by minus x#
+#resample#
+#
+rm(list=ls())#
+#
+library(truncnorm)#
+#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)#
+#
+thresh = function(a, lam){#
+	a = a - lam#
+	a[a<0] = 0#
+	return(a)#
+}#
+#
+lam = 590#
+tmp = G#
+obs = G[!is.na(G)]#
+tmp[is.na(G)] = 0#
+#
+for( i in 1:5000){#
+  s = svd(tmp)#
+  s$d = thresh(s$d, lam)#
+  low = s$u%*%diag(s$d)%*%t(s$v)#
+  tmp[is.na(G)] = low[is.na(G)]#
+}#
+ss=svd(tmp)#
+##Getting rid of fixed effect:#
+Gnorm=G#
+x=mean(tmp)#
+y=rowMeans(tmp)#
+w=colMeans(tmp)#
+#
+for(j in 1:1276){#
+	Gnorm[j,]=Gnorm[j,]-y[j]#
+	}#
+for(k in 1:72){#
+	Gnorm[,k]=Gnorm[,k]-w[k]#
+	}#
+Gnorm=Gnorm+x#
+#
+lam1=550#
+tmp1 = Gnorm#
+obs1 = Gnorm[!is.na(Gnorm)]#
+tmp1[is.na(Gnorm)] = mean(Gnorm[!is.na(Gnorm)])#
+#
+for( h in 1:5000){#
+  s1 = svd(tmp1)#
+  s1$d = thresh(s1$d, lam1)#
+  low1 = s1$u%*%diag(s1$d)%*%t(s1$v)#
+  tmp1[is.na(Gnorm)] = low1[is.na(Gnorm)]#
+}
+ss1 = svd(tmp1)
+mean(G[!is.na(G)])
+min(G[!is.na(G)])
+max(G[!is.na(G)])
+W = matrix(rtnorm(91872, mean = mu, sd = sigma, lower = 100, upper = 500), 1276, 72)#
+	W[is.na(G)]=NA
+K = as.list(G)#
+K=K[!is.na(K)]#
+K=as.numeric(K)#
+mu = mean(K)#
+sigma = sd(K)#
+singular_matrix = matrix(, nrow = 100, ncol = 72)#
+singular_matrix1 = matrix(, nrow = 100, ncol = 72)#
+student_matrix = matrix(0, nrow = 1276, ncol = 72)#
+student_matrix1 = matrix(0, nrow = 1276, ncol = 72)
+W = matrix(rtnorm(91872, mean = mu, sd = sigma, lower = 100, upper = 500), 1276, 72)
+W = matrix(rtruncnorm(91872, a=100, b = 500, mean = mu, sd = sigma, ), 1276, 72)#
+	W[is.na(G)]=NA
+W = matrix(rtruncnorm(91872, a=100, b = 500, mean = mu, sd = sigma), 1276, 72)
+W[is.na(G)]=NA
+new_lam = 870#
+	new_tmp = W#
+	new_obs = W[!is.na(W)]#
+	new_tmp[is.na(W)] = mu#
+#
+	for( i in 1:5000){#
+  	new_s = svd(new_tmp)#
+  	new_s$d = thresh(new_s$d, new_lam)#
+  	new_low = new_s$u%*%diag(new_s$d)%*%t(new_s$v)#
+  	new_tmp[is.na(W)] = new_low[is.na(W)]#
+	}#
+	new_ss = svd(new_tmp)#
+	singular_matrix[l,]=new_ss$d#
+	student_matrix = student_matrix+new_ss$u
+new_ss$d
+ss$d
+new_s$d
+Wnorm=W#
+	x=mean(new_tmp)#
+    y=rowMeans(new_tmp)#
+	w=colMeans(new_tmp)#
+#
+	for(j in 1:1276){#
+	Wnorm[j,]=Wnorm[j,]-y[j]#
+	}#
+	for(k in 1:72){#
+	Wnorm[,k]=Wnorm[,k]-w[k]#
+	}#
+	Wnorm=Wnorm+x#
+#
+	new_lam1=850#
+	new_tmp1 = Wnorm#
+	new_obs1 = Wnorm[!is.na(Wnorm)]#
+	new_tmp1[is.na(Wnorm)] = mean(Wnorm[!is.na(Wnorm)])#
+#
+	for( h in 1:5000){#
+ 	 	new_s1 = svd(new_tmp1)#
+  		new_s1$d = thresh(new_s1$d, new_lam1)#
+  		new_low1 = new_s1$u%*%diag(new_s1$d)%*%t(new_s1$v)#
+  		new_tmp1[is.na(Wnorm)] = new_low1[is.na(Wnorm)]#
+	}
+new_ss1 = svd(new_tmp1)
+new_ss1$d
+ss1$d
+singular = read.csv("two-tier-structure-simulation.csv")#
+singular = singular[,-1]#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of N is 57,557", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of N is 1,222", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of N is 399", main ="", breaks = 20)
+singular = read.csv("two-tier-structure-simulation.csv")#
+singular = singular[,-1]#
+par(mfrow=c(3,1))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of N is 57,557", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of N is 1,222", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of N is 399", main ="", breaks = 20)
+par(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of N is 57,557", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of N is 1,222", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of N is 399", main ="", breaks = 20)
+par(mfrow=c(3,1))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of N is 57,557", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of N is 1,222", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of N is 399", main ="", breaks = 20)
+ar(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of N is 57,557", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of N is 1,222", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of N is 399", main ="", breaks = 20)
+par(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of N is 57,557", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of N is 1,222", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of N is 399", main ="", breaks = 20)
+par(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of M is 63,022", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of N is 4,228", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of N is 603", main ="", breaks = 20)
+singular = read.csv("two-tier-structure-simulation1.csv")#
+singular = singular[,-1]#
+par(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of N is 3,350", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of N is 1,830", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of N is 560", main ="", breaks = 20)
+singular = read.csv("two-tier-structure-simulation.csv")#
+singular = singular[,-1]#
+par(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of M is 63,022", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of M is 4,228", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of M is 603", main ="", breaks = 20)
+## Structure simulation using a rank-3 matrix, lambda = 590, lambda1=550, normalize by minus x#
+#resample#
+#
+rm(list=ls())#
+#
+library(truncnorm)#
+library(XLConnect)#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)
+student = read.csv("student_dim.csv")#
+student=student[,-1]#
+#
+student1 = read.csv("student_dim1.csv")#
+student1=student1[,-1]
+wb2<- loadWorkbook("MATH.xlsx")#
+Tables2 <- readWorksheet(wb2, sheet = getSheets(wb2))#
+z = Tables2$"Pre-k"#
+dim(z)
+z$LunchStat=as.numeric(z$LunchStat)#
+z$Num_of_years = as.numeric(z$Num_of_years)#
+z$notLunch =z$Num_of_years-as.numeric(z$LunchStat)#
+#
+lm1= glm(cbind(z$LunchStat[-badstu],z$notLunch[-badstu])~student[,1]+student[,2]+student[,3], family = binomial)#
+summary(lm1)#
+#
+lm2= glm(cbind(z$LunchStat[-badstu],z$notLunch[-badstu])~student1[,1]+student1[,2]+student1[,3], family = binomial)#
+summary(lm2)
+z$Homeless = as.numeric(z$Homeless)#
+z$binary = z$Homeless#
+z$binary[z$Homeless > 0] = 1#
+lm5= glm(z$binary[-badstu]~student[,1]+student[,2]+student[,3], family = binomial)#
+summary(lm5)#
+#
+lm6= glm(z$binary[-badstu]~student1[,1]+student1[,2]+student1[,3], family = binomial)#
+summary(lm6)
+## Demographic:#
+dem = Tables2$"Demographic"#
+#
+#gender:#
+dem$gender = dem$gender_cd#
+dem$gender[dem$gender=="M"]=0#
+dem$gender[dem$gender=="F"]=1#
+dem$gender=as.numeric(dem$gender)#
+#
+lm7= glm(dem$gender[-badstu]~student[,1]+student[,2]+student[,3], family = binomial)#
+summary(lm7)#
+#
+lm8= glm(dem$gender[-badstu]~student1[,1]+student1[,2]+student1[,3], family = binomial)#
+summary(lm8)
+dem$race = dem$racial_ethnic_cd#
+dem$race[dem$race != "W"] = 1#
+dem$race[dem$race == "W"] = 0#
+dem$race=as.numeric(dem$race)#
+#
+lm9= glm(dem$race[-badstu]~student[,1]+student[,2]+student[,3], family = binomial)#
+summary(lm9)#
+#
+lm10= glm(dem$race[-badstu]~student1[,1]+student1[,2]+student1[,3], family = binomial)#
+summary(lm10)
+singular = read.csv("two-tier-structure-simulation.csv")#
+singular = singular[,-1]#
+par(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of M is 63,022", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of M is 4,228", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of M is 603", main ="", breaks = 20)
+singular = read.csv("two-tier-structure-simulation1.csv")#
+singular = singular[,-1]#
+par(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of N is 3,350", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of N is 1,830", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of N is 560", main ="", breaks = 20)
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of N is 3,350", main ="", breaks = 20)
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of N is 1,830", main ="", breaks = 20)
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of N is 560", main ="", breaks = 20)
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of M is 63,022", main ="", breaks = 20)
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of M is 4,228", main ="", breaks = 20)
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of M is 603", main ="", breaks = 20)
+## Structure simulation using a rank-3 matrix, lambda = 590, lambda1=550, normalize by minus x#
+#resample#
+#
+rm(list=ls())#
+#
+library(truncnorm)#
+library(XLConnect)#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)#
+student = read.csv("student_dim.csv")#
+student=student[,-1]#
+#
+student1 = read.csv("student_dim1.csv")#
+student1=student1[,-1]#
+wb2<- loadWorkbook("MATH.xlsx")#
+Tables2 <- readWorksheet(wb2, sheet = getSheets(wb2))#
+z = Tables2$"Pre-k"#
+dim(z)#
+#
+z$LunchStat=as.numeric(z$LunchStat)#
+z$Num_of_years = as.numeric(z$Num_of_years)#
+z$notLunch =z$Num_of_years-as.numeric(z$LunchStat)#
+#
+lm1= glm(cbind(z$LunchStat[-badstu],z$notLunch[-badstu])~student[,1]+student[,2]+student[,3], family = binomial)#
+summary(lm1)
+1-3974.6/4005.8
+## Structure simulation using a rank-3 matrix, lambda = 590, lambda1=550, normalize by minus x#
+#resample#
+#
+rm(list=ls())#
+library(truncnorm)#
+library(XLConnect)#
+#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)
+wb2<- loadWorkbook("MATH.xlsx")#
+Tables2 <- readWorksheet(wb2, sheet = getSheets(wb2))#
+Pre-k = Tables2$"Pre-k"#
+dem = Tables2$"Demographic"#
+#
+##Lunch variable#
+Pre-k$LunchStat=as.numeric(Pre-k$LunchStat)#
+Pre-k$Num_of_years = as.numeric(Pre-k$Num_of_years)#
+Pre-k$notLunch =Pre-k$Num_of_years-as.numeric(Pre-k$LunchStat)#
+#
+## Student Homeless Status#
+Pre-k$Homeless = as.numeric(Pre-k$Homeless)#
+Pre-k$binary = Pre-k$Homeless#
+Pre-k$binary[Pre-k$Homeless > 0] = 1#
+#
+#racial#
+dem$race = dem$racial_ethnic_cd#
+dem$race[dem$race != "W"] = 1#
+dem$race[dem$race == "W"] = 0#
+dem$race=as.numeric(dem$race)#
+#
+#country:#
+dem$country = dem$country_cd#
+dem$country[dem$country != "US"] = 1#
+dem$country[dem$country == "US"] = 0#
+dem$country=as.numeric(dem$country)#
+#
+#language:#
+dem$language = dem$language_cd  #
+dem$language[dem$language != "EN"] = 1#
+dem$language[dem$language == "EN"] = 0#
+dem$language=as.numeric(dem$language)#
+#
+#birth_country:#
+dem$birth_country = dem$country_cd_borned_in#
+dem$birth_country[dem$birth_country != "US"] = 1#
+dem$birth_country[dem$birth_country == "US"] = 0#
+dem$birth_country=as.numeric(dem$birth_country)#
+#
+#parent_language:#
+dem$parent_language = dem$language_have_parents_speaking#
+dem$parent_language[dem$parent_language != "EN"] = 1#
+dem$parent_language[dem$parent_language == "EN"] = 0#
+dem$parent_language=as.numeric(dem$parent_language)
+rm(list=ls())#
+library(truncnorm)#
+library(XLConnect)#
+#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)#
+#
+wb2<- loadWorkbook("MATH.xlsx")#
+Tables2 <- readWorksheet(wb2, sheet = getSheets(wb2))#
+Pre_k = Tables2$"Pre_k"#
+dem = Tables2$"Demographic"#
+#
+##Lunch variable#
+Pre_k$LunchStat=as.numeric(Pre_k$LunchStat)#
+Pre_k$Num_of_years = as.numeric(Pre_k$Num_of_years)#
+Pre_k$notLunch =Pre_k$Num_of_years-as.numeric(Pre_k$LunchStat)#
+#
+## Student Homeless Status#
+Pre_k$Homeless = as.numeric(Pre_k$Homeless)#
+Pre_k$binary = Pre_k$Homeless#
+Pre_k$binary[Pre_k$Homeless > 0] = 1#
+#
+#racial#
+dem$race = dem$racial_ethnic_cd#
+dem$race[dem$race != "W"] = 1#
+dem$race[dem$race == "W"] = 0#
+dem$race=as.numeric(dem$race)#
+#
+#country:#
+dem$country = dem$country_cd#
+dem$country[dem$country != "US"] = 1#
+dem$country[dem$country == "US"] = 0#
+dem$country=as.numeric(dem$country)#
+#
+#language:#
+dem$language = dem$language_cd  #
+dem$language[dem$language != "EN"] = 1#
+dem$language[dem$language == "EN"] = 0#
+dem$language=as.numeric(dem$language)#
+#
+#birth_country:#
+dem$birth_country = dem$country_cd_borned_in#
+dem$birth_country[dem$birth_country != "US"] = 1#
+dem$birth_country[dem$birth_country == "US"] = 0#
+dem$birth_country=as.numeric(dem$birth_country)#
+#
+#parent_language:#
+dem$parent_language = dem$language_have_parents_speaking#
+dem$parent_language[dem$parent_language != "EN"] = 1#
+dem$parent_language[dem$parent_language == "EN"] = 0#
+dem$parent_language=as.numeric(dem$parent_language)
+##Generate random matrix#
+K = as.list(G)#
+K=K[!is.na(K)]#
+K=as.numeric(K)#
+mu = mean(K)#
+sigma = sd(K)#
+#
+Lunch_Rsquare = c(1:100)#
+Lunch_Rsquare1 = c(1:100)#
+Homeless_Rsquare = c(1:100)#
+Homeless_Rsquare1 = c(1:100)#
+Gender_Rsquare = c(1:100)#
+Gender_Rsquare1 = c(1:100)#
+#
+Race_Rsquare = c(1:100)#
+Race_Rsquare1 = c(1:100)#
+#
+Country_Rsquare = c(1:100)#
+Country_Rsquare1 = c(1:100)#
+#
+Language_Rsquare = c(1:100)#
+Language_Rsquare1 = c(1:100)#
+#
+Birth_Country_Rsquare = c(1:100)#
+Birth_Country_Rsquare1 = c(1:100)#
+Parent_Language_Rsquare = c(1:100)#
+Parent_Language_Rsquare1 = c(1:100)
+W = matrix(rtruncnorm(91872, a=100, b = 500, mean = mu, sd = sigma), 1276, 72)
+W[is.na(G)]=NA
+new_lam = 870#
+	new_tmp = W#
+	new_obs = W[!is.na(W)]#
+	new_tmp[is.na(W)] = mu#
+#
+	for( i in 1:5000){#
+  	new_s = svd(new_tmp)#
+  	new_s$d = thresh(new_s$d, new_lam)#
+  	new_low = new_s$u%*%diag(new_s$d)%*%t(new_s$v)#
+  	new_tmp[is.na(W)] = new_low[is.na(W)]#
+	}#
+	Wnorm=W#
+	x=mean(new_tmp)#
+    y=rowMeans(new_tmp)#
+	w=colMeans(new_tmp)#
+#
+	for(j in 1:1276){#
+	Wnorm[j,]=Wnorm[j,]-y[j]#
+	}#
+	for(k in 1:72){#
+	Wnorm[,k]=Wnorm[,k]-w[k]#
+	}#
+	Wnorm=Wnorm+x#
+#
+	new_lam1=850#
+	new_tmp1 = Wnorm#
+	new_obs1 = Wnorm[!is.na(Wnorm)]#
+	new_tmp1[is.na(Wnorm)] = mean(Wnorm[!is.na(Wnorm)])#
+#
+	for( h in 1:5000){#
+ 	 	new_s1 = svd(new_tmp1)#
+  		new_s1$d = thresh(new_s1$d, new_lam1)#
+  		new_low1 = new_s1$u%*%diag(new_s1$d)%*%t(new_s1$v)#
+  		new_tmp1[is.na(Wnorm)] = new_low1[is.na(Wnorm)]#
+	}
+thresh = function(a, lam){#
+	a = a - lam#
+	a[a<0] = 0#
+	return(a)#
+}
+new_lam = 870#
+	new_tmp = W#
+	new_obs = W[!is.na(W)]#
+	new_tmp[is.na(W)] = mu#
+#
+	for( i in 1:5000){#
+  	new_s = svd(new_tmp)#
+  	new_s$d = thresh(new_s$d, new_lam)#
+  	new_low = new_s$u%*%diag(new_s$d)%*%t(new_s$v)#
+  	new_tmp[is.na(W)] = new_low[is.na(W)]#
+	}#
+	Wnorm=W#
+	x=mean(new_tmp)#
+    y=rowMeans(new_tmp)#
+	w=colMeans(new_tmp)#
+#
+	for(j in 1:1276){#
+	Wnorm[j,]=Wnorm[j,]-y[j]#
+	}#
+	for(k in 1:72){#
+	Wnorm[,k]=Wnorm[,k]-w[k]#
+	}#
+	Wnorm=Wnorm+x#
+#
+	new_lam1=850#
+	new_tmp1 = Wnorm#
+	new_obs1 = Wnorm[!is.na(Wnorm)]#
+	new_tmp1[is.na(Wnorm)] = mean(Wnorm[!is.na(Wnorm)])#
+#
+	for( h in 1:5000){#
+ 	 	new_s1 = svd(new_tmp1)#
+  		new_s1$d = thresh(new_s1$d, new_lam1)#
+  		new_low1 = new_s1$u%*%diag(new_s1$d)%*%t(new_s1$v)#
+  		new_tmp1[is.na(Wnorm)] = new_low1[is.na(Wnorm)]#
+	}
+lm1= glm(cbind(Pre_k$LunchStat[-badstu],Pre_k$notLunch[-badstu])~s$u[,1:3], family = binomial)
+lm1= glm(cbind(Pre_k$LunchStat[-badstu],Pre_k$notLunch[-badstu])~new_s$u[,1:3], family = binomial)
+dim(new_s$u[,1])
+dim(new_s$u)
+dim(new_s$u[,1])
+length(new_s$u[,1])
+length(Pre_k$LunchStat[-badstu])
+Pre_k = Tables2$"Pre_k"
+Pre_k$LunchStat=as.numeric(Pre_k$LunchStat)#
+Pre_k$Num_of_years = as.numeric(Pre_k$Num_of_years)#
+Pre_k$notLunch =Pre_k$Num_of_years-as.numeric(Pre_k$LunchStat)
+dim(Pre_k$LunchStat[-badstu]))
+dim(Pre_k$LunchStat[-badstu])
+length(Pre_k$LunchStat[-badstu])
+dim(Pre_k)
+dem = Tables2$"Demographic"
+dim(dem)
+Pre_k = Tables2$"Pre-k"
+dim(Pre_k)
+Pre_k$LunchStat=as.numeric(Pre_k$LunchStat)
+Pre_k$LunchStat=as.numeric(Pre_k$LunchStat)#
+Pre_k$Num_of_years = as.numeric(Pre_k$Num_of_years)#
+Pre_k$notLunch =Pre_k$Num_of_years-as.numeric(Pre_k$LunchStat)#
+#
+## Student Homeless Status#
+Pre_k$Homeless = as.numeric(Pre_k$Homeless)#
+Pre_k$binary = Pre_k$Homeless#
+Pre_k$binary[Pre_k$Homeless > 0] = 1
+lm1= glm(cbind(Pre_k$LunchStat[-badstu],Pre_k$notLunch[-badstu])~new_s$u[,1:3], family = binomial)
+summary(lm1)
+lm1$null.dev
+lm1$dev
+1-lm1$dev/lm1$null.dev
+lm3= glm(Pre_k$binary[-badstu]~new_s$u[,1:3], family = binomial)#
+	lm4= glm(Pre_k$binary[-badstu]~new_s1$u[,1:3], family = binomial)#
+	Homeless_Rsquare[l] = 1-lm3$dev/lm3$null.dev#
+	Homeless_Rsquare1[l] = 1-lm4$dev/lm4$null.dev
+lm4= glm(Pre_k$binary[-badstu]~new_s1$u[,1:3], family = binomial)
+lm3= glm(Pre_k$binary[-badstu]~new_s$u[,1:3], family = binomial)
+1-lm3$dev/lm3$null.dev
+lm4$dev/lm4$null.dev
+1-lm4$dev/lm4$null.dev
+10/320
+lm5= glm(dem$gender[-badstu]~new_s$u[,1:3], family = binomial)#
+	lm6= glm(dem$gender[-badstu]~new_s1$u[,1:3], family = binomial)
+dem$gender[1:10,]
+dem$gender[1:10]
+dem$gender = dem$gender_cd#
+dem$gender[dem$gender=="M"]=0#
+dem$gender[dem$gender=="F"]=1#
+dem$gender=as.numeric(dem$gender)
+dem$gender[1:10]
+lm5= glm(dem$gender[-badstu]~new_s$u[,1:3], family = binomial)#
+	lm6= glm(dem$gender[-badstu]~new_s1$u[,1:3], family = binomial)#
+	Gender_Rsquare[l] = 1-lm5$dev/lm5$null.dev#
+	Gender_Rsquare1[l] = 1-lm6$dev/lm6$null.dev
+1-lm5$dev/lm5$null.dev
+1-lm6$dev/lm6$null.dev
+lm9= glm(dem$country[-badstu]~new_s$u[,1:3], family = binomial)#
+	lm10= glm(dem$country[-badstu]~new_s1$u[,1:3], family = binomial
+dem$country = dem$country_cd#
+dem$country[dem$country != "US"] = 1#
+dem$country[dem$country == "US"] = 0#
+dem$country=as.numeric(dem$country)
+lm7= glm(dem$race[-badstu]~new_s$u[,1:3], family = binomial)
+dem$race = dem$racial_ethnic_cd#
+dem$race[dem$race != "W"] = 1#
+dem$race[dem$race == "W"] = 0#
+dem$race=as.numeric(dem$race)
+lm7= glm(dem$race[-badstu]~new_s$u[,1:3], family = binomial)#
+	lm8= glm(dem$race[-badstu]~new_s1$u[,1:3], family = binomial)
+1-lm7$dev/lm7$null.dev
+1-lm8$dev/lm8$null.dev
+lm9= glm(dem$country[-badstu]~new_s$u[,1:3], family = binomial)#
+	lm10= glm(dem$country[-badstu]~new_s1$u[,1:3], family = binomial)#
+	Country_Rsquare[l] = 1-lm9$dev/lm9$null.dev#
+	Country_Rsquare1[l] = 1-lm10$dev/lm10$null.dev
+1-lm9$dev/lm9$null.dev
+1-lm10$dev/lm10$null.dev
+Country_Rsquare
+lm11= glm(dem$language[-badstu]~new_s$u[,1:3], family = binomial)#
+	lm12= glm(dem$language[-badstu]~new_s1$u[,1:3], family = binomial)
+dem$language = dem$language_cd  #
+dem$language[dem$language != "EN"] = 1#
+dem$language[dem$language == "EN"] = 0#
+dem$language=as.numeric(dem$language)
+dem$birth_country = dem$country_cd_borned_in#
+dem$birth_country[dem$birth_country != "US"] = 1#
+dem$birth_country[dem$birth_country == "US"] = 0#
+dem$birth_country=as.numeric(dem$birth_country)#
+#
+#parent_language:#
+dem$parent_language = dem$language_have_parents_speaking#
+dem$parent_language[dem$parent_language != "EN"] = 1#
+dem$parent_language[dem$parent_language == "EN"] = 0#
+dem$parent_language=as.numeric(dem$parent_language)
+Country_Rsquare[l] = 1-lm9$dev/lm9$null.dev
+lm11= glm(dem$language[-badstu]~new_s$u[,1:3], family = binomial)#
+	lm12= glm(dem$language[-badstu]~new_s1$u[,1:3], family = binomial)
+1-lm11$dev/lm11$null.dev
+lm12$dev/lm12$null.dev
+1-lm12$dev/lm12$null.dev
+lm13= glm(dem$birth_country[-badstu]~new_s$u[,1:3], family = binomial)#
+	lm14= glm(dem$birth_country[-badstu]~new_s1$u[,1:3], family = binomial)
+1-lm13$dev/lm13$null.dev
+1-lm14$dev/lm14$null.dev
+lm15= glm(dem$parent_language[-badstu]~new_s$u[,1:3], family = binomial)#
+	lm16= glm(dem$parent_language[-badstu]~new_s1$u[,1:3], family = binomial)
+1-lm15$dev/lm15$null.d
+lm16$dev/lm16$null.dev
+1-lm16$dev/lm16$null.dev
+## Structure simulation using a rank-3 matrix, lambda = 590, lambda1=550, normalize by minus x#
+#resample#
+#
+rm(list=ls())#
+#
+library(truncnorm)#
+#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)
+rm(list=ls())#
+# Load data#
+library(XLConnect)#
+wb <- loadWorkbook("MATH.xlsx")#
+Tables <- readWorksheet(wb, sheet = "MATH", header = TRUE)#
+x = Tables#
+x = x[,-1]#
+x = as.matrix(x)
+sim(x)
+wb <- loadWorkbook("MATH.xlsx")#
+Tables <- readWorksheet(wb, sheet = "MATH", header = TRUE)#
+y = Tables#
+y = y[,-1]#
+y = as.matrix(y)
+dim(y)
+## Structure simulation using a rank-3 matrix, lambda = 590, lambda1=550, normalize by minus x#
+#resample#
+#
+rm(list=ls())#
+#
+library(truncnorm)#
+#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)
+dim(x)
+x[1:3,]
+y[1:3,]
+wb <- loadWorkbook("MATH.xlsx")#
+Tables <- readWorksheet(wb, sheet = "MATH", header = TRUE)#
+y = Tables#
+y = y[,-1]#
+y = as.matrix(y)
+dim(y)
+y[1:3,]
+singular = read.csv("two-tier-structure-simulation.csv")#
+singular = singular[,-1]#
+par(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of M is 63,022", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of M is 4,228", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of M is 603", main ="", breaks = 20)
+singular = read.csv("two-tier-structure-simulation1.csv")#
+singular = singular[,-1]#
+par(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of N is 3,350", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of N is 1,830", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of N is 560", main ="", breaks = 20)
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of M is 63,022", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of M is 4,228", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of M is 603", main ="", breaks = 20)
+singular = read.csv("two-tier-structure-simulation1.csv")#
+singular = singular[,-1]#
+par(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of N is 3,350", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of N is 1,830", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of N is 560", main ="", breaks = 20)
+singular = read.csv("two-tier-structure-simulation.csv")#
+singular = singular[,-1]#
+par(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of M is 63,022", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of M is 4,228", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of M is 603", main ="", breaks = 20)
+singular1 = read.csv("two-tier-structure-simulation1.csv")#
+singular1 = singular1[,-1]#
+par(mfrow=c(1,3))#
+hist(singular1$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of N is 3,350", main ="", breaks = 20)#
+#
+hist(singular1$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of N is 1,830", main ="", breaks = 20)#
+#
+hist(singular1$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of N is 560", main ="", breaks = 20)
+singular = read.csv("two-tier-structure-simulation.csv")
+singular$V1
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of M is 63,022", main ="", breaks = 20)
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of M is 4,228", main ="", breaks = 20)
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of M is 603", main ="", breaks = 20)
+singular = read.csv("two-tier-structure-simulation.csv")#
+singular = singular[,-1]
+summary(singular$V1)
+length(singular$V1)
+v1_sd = sd(singular$V1)*sqrt(99/100)
+v1_sd
+v1_mean = mean(singular$V1)
+v1_mean
+z=(63,022-v1_mean)/v1_sd
+z=(63022-v1_mean)/v1_sd
+z
+v1_sd = sd(singular$V1)*sqrt(99/100)#
+v1_mean = mean(singular$V1)#
+z1=(63,022-v1_mean)/v1_sd#
+z1
+v1_sd = sd(singular$V1)*sqrt(99/100)#
+v1_mean = mean(singular$V1)#
+z1=(63022-v1_mean)/v1_sd#
+z1
+v2_sd = sd(singular$V2)*sqrt(99/100)#
+v2_mean = mean(singular$V2)#
+z2=(4228-v2_mean)/v2_sd#
+z2
+v3_sd = sd(singular$V3)*sqrt(99/100)#
+v3_mean = mean(singular$V3)#
+z3=(603-v3_mean)/v3_sd#
+z3
+singular = read.csv("two-tier-structure-simulation1.csv")#
+singular = singular[,-1]#
+par(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of N is 3,350", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of N is 1,830", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of N is 560", main ="", breaks = 20)#
+#
+v1_sd = sd(singular$V1)*sqrt(99/100)#
+v1_mean = mean(singular$V1)#
+z1=(3350-v1_mean)/v1_sd#
+z1#
+#
+v2_sd = sd(singular$V2)*sqrt(99/100)#
+v2_mean = mean(singular$V2)#
+z2=(1830-v2_mean)/v2_sd#
+z2#
+#
+v3_sd = sd(singular$V3)*sqrt(99/100)#
+v3_mean = mean(singular$V3)#
+z3=(560-v3_mean)/v3_sd#
+z3
+library(ggplot2)#
+lrmc= read.csv("rmse-9.csv")#
+easy= read.csv("rmse-9.csv")#
+easier= read.csv("easier-9.csv")#
+#
+lrmc = lrmc[,-1]#
+easy = easy[,-1]#
+easier = easier[,-1]#
+length(lrmc)#
+mean(lrmc[!is.na(lrmc)])#
+mean(easy[!is.na(easy)])#
+hist(lrmc, col = "steelblue1", ylab = "Frequency", xlab = "", main ="")#
+#
+m<-mean(lrmc[!is.na(lrmc)])#
+std<-sqrt(var(lrmc[!is.na(lrmc)]))#
+#
+ma = mean(easy[!is.na(easy)])#
+stda<-sqrt(var(easy[!is.na(easy)]))#
+#
+mb = mean(easier[!is.na(easier)])#
+stdb<-sqrt(var(easier[!is.na(easier)]))#
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = "dotted", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = "dashed", lwd=1, add=TRUE, yaxt="n")#
+hist(lrmc, prob=TRUE, xlab="Error Rate", ylab = "Frequency", breaks=20, col=rgb(0,1,1,0.4), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lty = 1, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = 4, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = 6, lwd=1, add=TRUE, yaxt="n")#
+legend("topright", legend = c("IFA Model", "Two-way Anova Model", "Mean Model"), lty = c(1, 4, 6), lwd = c(1,1,1), col = c("red", "navy", "darkgreen"))
+curve(dnorm(x, mean =0, sd = 1), col="red", lwd=1, add=TRUE, yaxt="n")
+curve(dnorm(x, mean =0, sd = 1), col="red", lwd=1, add=TRUE, yaxt="n", xlim = c(-10,10))
+curve(dnorm(x, mean =0, sd = 1), col="red", lwd=1, add=TRUE, yaxt="n", xlim = c(-5,5))
+curve(dnorm(x, mean =0, sd = 1), col="red", lwd=1, add=TRUE, yaxt="n", xlim = c(-3,3))
+abline(v=10)
+abline(v=1)
+v1_sd = sd(singular$V1)*sqrt(99/100)#
+v1_mean = mean(singular$V1)#
+z1=(63022-v1_mean)/v1_sd#
+z1#
+#
+v2_sd = sd(singular$V2)*sqrt(99/100)#
+v2_mean = mean(singular$V2)#
+z2=(4228-v2_mean)/v2_sd#
+z2#
+#
+v3_sd = sd(singular$V3)*sqrt(99/100)#
+v3_mean = mean(singular$V3)#
+z3=(603-v3_mean)/v3_sd#
+z3
+singular = read.csv("two-tier-structure-simulation.csv")#
+singular = singular[,-1]#
+par(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of M is 63,022", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of M is 4,228", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of M is 603", main ="", breaks = 20)
+v1_sd = sd(singular$V1)*sqrt(99/100)#
+v1_mean = mean(singular$V1)#
+z1=(63022-v1_mean)/v1_sd#
+z1#
+#
+v2_sd = sd(singular$V2)*sqrt(99/100)#
+v2_mean = mean(singular$V2)#
+z2=(4228-v2_mean)/v2_sd#
+z2#
+#
+v3_sd = sd(singular$V3)*sqrt(99/100)#
+v3_mean = mean(singular$V3)#
+z3=(603-v3_mean)/v3_sd#
+z3
+curve(dnorm(x, mean =0, sd = 1), col="red", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=1)
+curve(dnorm(x, mean =0, sd = 1), col="red", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=z1)#
+abline(v=z2)#
+abline(v=z3)
+curve(dnorm(x, mean =0, sd = 1), col="red", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9)#
+abline(v=z2)#
+abline(v=z3)
+curve(dnorm(x, mean =0, sd = 1), col="red", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, \dots)#
+abline(v=z2)#
+abline(v=z3)
+abline(v=6.9, \dot)
+curve(dnorm(x, mean =0, sd = 1), col="red", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), col = "red")
+curve(dnorm(x, mean =0, sd = 1), col="red", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), col = "blue")
+curve(dnorm(x, mean =0, sd = 1), col="blue", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))
+abline(v=6.9, col = "red", lty="dotted")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+text(-1.5, 6.8, "cutoff", col = "red")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+text(-1.5, 0.1, "cutoff", col = "red")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+text(6.9, 0.1, "cutoff", col = "red")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+text(6.9, 0, "cutoff", col = "red")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+text(6.9, -1, "cutoff", col = "red")
+text(6.9, 0, "cutoff", col = "red")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+text(6.9, 0, "cutoff", col = "red")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+text(6.9, -0.1, "cutoff", col = "red")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+text(6.9, 0, "Sigma1", col = "red")
+z2
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+text(6.9, 0, "Sigma1", col = "red") #
+abline(v=z2, col = "red")#
+text(z2, 0, "Sigma2", col = "red") #
+#
+abline(v=z3, col = "red")#
+text(z2, 0, "Sigma2", col = "red")
+abline(v=6.9, col = "red", lty="dotted")#
+text(6.9, 0, "Sigma1", col = "red") #
+abline(v=z2, col = "red")#
+text(z2, 1, "Sigma2", col = "red") #
+#
+abline(v=z3, col = "red")#
+text(z2, 0, "Sigma3", col = "red")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+text(6.9, 0, "Sigma1", col = "red") #
+abline(v=z2, col = "red")#
+text(z2, 1, "Sigma2", col = "red") #
+#
+abline(v=z3, col = "red")#
+text(z2, 0, "Sigma3", col = "red")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+text(6.9, 0, "Sigma1", col = "red") #
+abline(v=z2, col = "red")#
+text(z2, 2, "Sigma2", col = "red") #
+#
+abline(v=z3, col = "red")#
+text(z2, 0, "Sigma3", col = "red")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))
+abline(v=6.9, col = "red", lty="dotted")
+text(6.9, 0, "Sigma1", col = "red")
+abline(v=z2, col = "red")
+text(z2, 4, "Sigma2", col = "red")
+abline(v=z2, col = "red")
+text(z2, 4, "Sigma2", col = "red")
+text(z2, 2, "Sigma2", col = "red")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+text(6.9, 0, "Sigma1", col = "red") #
+abline(v=z2, col = "red")#
+text(z2, 2, "Sigma2", col = "red")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+text(6.9, 0, "Sigma1", col = "red") #
+abline(v=z2, col = "red")#
+text(z2, 2, "Sigma2", col = "red") #
+#
+abline(v=z3, col = "red")#
+text(z2, 0, "Sigma3", col = "red")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+text(6.9, 0, "Sigma1", col = "red") #
+abline(v=z2, col = "red")#
+text(z2, 2, "Sigma2", col = "red") #
+#
+abline(v=z3, col = "red")#
+text(z3, 0, "Sigma3", col = "red")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue1", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+abline(v=z2, col = "green")#
+abline(v=z3, col = "blue")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "deeppink2")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7))#
+abline(v=6.9, col = "red", lty="dotted")#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty="dotted")#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty="dotted")#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", legend = c("First Singular Value", "Second Singular Value", "Third Singular Value"), lty = c("dotted", 1,1), col = c("red", "turquoise2", "magenta"))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty="dotted")#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", legend = c("First Singular Value", "Second Singular Value", "Third Singular Value"), lty = c("dotted", 2,2), col = c("red", "turquoise2", "magenta"))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty="dotted")#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", legend = c("First Singular Value", "Second Singular Value", "Third Singular Value"), lty = c(2,2,2), col = c("red", "turquoise2", "magenta"))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty="dotted")#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", legend = c("First Singular Value", "Second Singular Value", "Third Singular Value"), lty = c(2,4,2), col = c("red", "turquoise2", "magenta"))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty="dotted")#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", legend = c("First Singular Value", "Second Singular Value", "Third Singular Value"), lty = c(2,1,2), col = c("red", "turquoise2", "magenta"))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty="dotted")#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", legend = c("First Singular Value", "Second Singular Value", "Third Singular Value"), lty = c(3,1,1), col = c("red", "turquoise2", "magenta"))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty=3)#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", legend = c("First Singular Value", "Second Singular Value", "Third Singular Value"), lty = c(3,1,1), col = c("red", "turquoise2", "magenta"))
+z1
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty=3)#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", legend = c("Studentized 1st Singular Value = 25", "Studentized 2nd Singular Value = 25", "Studentized 3rd Singular Value = 25"), lty = c(3,1,1), col = c("red", "turquoise2", "magenta"))
+z2
+z3
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty=3)#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", legend = c("Studentized 1st Singular Value = 25", "Studentized 2nd Singular Value = 6.3", "Studentized 3rd Singular Value = -5.4"), lty = c(3,1,1), col = c("red", "turquoise2", "magenta"))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty=3)#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", inset=c(-0.2,0),legend = c("Studentized 1st Singular Value = 25", "Studentized 2nd Singular Value = 6.3", "Studentized 3rd Singular Value = -5.4"), lty = c(3,1,1), col = c("red", "turquoise2", "magenta"))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty=3)#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", inset=c(-0.5,0),legend = c("Studentized 1st Singular Value = 25", "Studentized 2nd Singular Value = 6.3", "Studentized 3rd Singular Value = -5.4"), lty = c(3,1,1), col = c("red", "turquoise2", "magenta"))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty=3)#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", inset=c(-0.5,-1),legend = c("Studentized 1st Singular Value = 25", "Studentized 2nd Singular Value = 6.3", "Studentized 3rd Singular Value = -5.4"), lty = c(3,1,1), col = c("red", "turquoise2", "magenta"))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty=3)#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", inset=c(0,-1),legend = c("Studentized 1st Singular Value = 25", "Studentized 2nd Singular Value = 6.3", "Studentized 3rd Singular Value = -5.4"), lty = c(3,1,1), col = c("red", "turquoise2", "magenta"))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty=3)#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", inset=c(0,-0.5),legend = c("Studentized 1st Singular Value = 25", "Studentized 2nd Singular Value = 6.3", "Studentized 3rd Singular Value = -5.4"), lty = c(3,1,1), col = c("red", "turquoise2", "magenta"))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty=3)#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", inset=c(0,0),legend = c("Studentized 1st Singular Value = 25", "Studentized 2nd Singular Value = 6.3", "Studentized 3rd Singular Value = -5.4"), lty = c(3,1,1), col = c("red", "turquoise2", "magenta"))
+par(xpd=T, mar=par()$mar+c(0,0,0,6))#
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty=3)#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", inset=c(0,0),legend = c("Studentized 1st Singular Value = 25", "Studentized 2nd Singular Value = 6.3", "Studentized 3rd Singular Value = -5.4"), lty = c(3,1,1), col = c("red", "turquoise2", "magenta"))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty=3)#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", inset=c(0,0),legend = c("Studentized 1st Singular Value = 25", "Studentized 2nd Singular Value = 6.3", "Studentized 3rd Singular Value = -5.4"), lty = c(3,1,1), col = c("red", "turquoise2", "magenta"))
+par(mar=c(5, 4, 4, 2) + 0.1)
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty=3)#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", inset=c(0,0),legend = c("Studentized 1st Singular Value = 25", "Studentized 2nd Singular Value = 6.3", "Studentized 3rd Singular Value = -5.4"), lty = c(3,1,1), col = c("red", "turquoise2", "magenta"))
+singular = read.csv("two-tier-structure-simulation.csv")#
+singular = singular[,-1]#
+par(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of M is 63,022", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of M is 4,228", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of M is 603", main ="", breaks = 20)#
+#
+v1_sd = sd(singular$V1)*sqrt(99/100)#
+v1_mean = mean(singular$V1)#
+z1=(63022-v1_mean)/v1_sd#
+z1#
+#
+v2_sd = sd(singular$V2)*sqrt(99/100)#
+v2_mean = mean(singular$V2)#
+z2=(4228-v2_mean)/v2_sd#
+z2#
+#
+v3_sd = sd(singular$V3)*sqrt(99/100)#
+v3_mean = mean(singular$V3)#
+z3=(603-v3_mean)/v3_sd#
+z3
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty=3)#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", inset=c(0,0),legend = c("Studentized 1st Singular Value = 25", "Studentized 2nd Singular Value = 6.3", "Studentized 3rd Singular Value = -5.4"), lty = c(3,1,1), col = c("red", "turquoise2", "magenta"))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the singular values", ylab ="")#
+abline(v=6.9, col = "red", lty=3)#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", inset=c(0,0),legend = c("1st Singular Value = 25", "2nd Singular Value = 6.3", "Singular Value = -5.4"), lty = c(3,1,1), col = c("red", "turquoise2", "magenta"))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the Singular Values in Respect to the Simulated Values", ylab ="")#
+abline(v=6.9, col = "red", lty=3)#
+abline(v=z2, col = "turquoise2")#
+abline(v=z3, col = "magenta")#
+legend("topright", inset=c(0,0),legend = c("1st Singular Value = 25", "2nd Singular Value = 6.3", "Singular Value = -5.4"), lty = c(3,1,1), col = c("red", "turquoise2", "magenta"))
+singular = read.csv("two-tier-structure-simulation1.csv")#
+singular = singular[,-1]#
+par(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of N is 3,350", main ="", breaks = 20)#
+#
+hist(singular$V2, col = "steelblue1", ylab ="Frequency", xlab = "Second Singular Value of N is 1,830", main ="", breaks = 20)#
+#
+hist(singular$V3, col = "steelblue1", ylab ="Frequency", xlab="Third Singular Value of N is 560", main ="", breaks = 20)#
+#
+v1_sd = sd(singular$V1)*sqrt(99/100)#
+v1_mean = mean(singular$V1)#
+z1=(3350-v1_mean)/v1_sd#
+z1#
+#
+v2_sd = sd(singular$V2)*sqrt(99/100)#
+v2_mean = mean(singular$V2)#
+z2=(1830-v2_mean)/v2_sd#
+z2#
+#
+v3_sd = sd(singular$V3)*sqrt(99/100)#
+v3_mean = mean(singular$V3)#
+z3=(560-v3_mean)/v3_sd#
+z3
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the Singular Values in Respect to the Simulated Values", ylab ="")#
+abline(v=6.9, col = "red", lty=3)#
+abline(v=z2, col = "turquoise2", lty=3)#
+abline(v=z3, col = "magenta")#
+legend("topright", inset=c(0,0),legend = c("1st Singular Value = 9.5", "2nd Singular Value = 19.2", "Singular Value = -6.6"), lty = c(3,3,1), col = c("red", "turquoise2", "magenta"))
+curve(dnorm(x, mean =0, sd = 1), col="steelblue4", lwd=1, add=TRUE, yaxt="n", xlim = c(-7,7), xlab="z-scores of the Singular Values in Respect to the Simulated Values", ylab ="")#
+abline(v=6.5, col = "red", lty=3)#
+abline(v=6.9, col = "turquoise2", lty=3)#
+abline(v=z3, col = "magenta")#
+legend("topright", inset=c(0,0),legend = c("1st Singular Value = 9.5", "2nd Singular Value = 19.2", "Singular Value = -6.6"), lty = c(3,3,1), col = c("red", "turquoise2", "magenta"))
+singular = read.csv("two-tier-structure-simulation.csv")#
+singular = singular[,-1]#
+par(mfrow=c(1,3))#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of M is 63,022", main ="", breaks = 20)
+singular = read.csv("two-tier-structure-simulation.csv")#
+singular = singular[,-1]#
+hist(singular$V1, col = "steelblue1", ylab ="Frequency", xlab="First Singular Value of M is 63,022", main ="", breaks = 20)

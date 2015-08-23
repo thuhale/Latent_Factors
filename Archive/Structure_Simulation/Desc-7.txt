@@ -1,0 +1,2 @@
+Simulation-7.R:
+First, we apply IFA to M, calculate mu_{i.}, mu_{.j}, and mu_{..}. Subtract that from M to remove the fixed effect, we got a new matrix N. Calculate mean and sd of N. Generate a random matrix with entries from truncated N( mean(N), sd(N), min(N), max(N)). Apply IFA on that matrix
