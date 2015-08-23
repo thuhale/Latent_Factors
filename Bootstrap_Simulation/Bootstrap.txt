@@ -1,0 +1,6 @@
+1)  estimate U, D, V as Uhat, Dhat, Vhat.
+2)      estimate sig-hat^2 = sum_observed (M_ij - M-hat_ij)^2 / (st - 3(s + t))
+3)      Simulate e* such that e*_ij ~ N(0, sig-hat^2)
+4)      M** = Uhat Dhat Vhat' + e*
+5)      estimate Uhat, Dhat, Vhat using observed values in M**.  Denote estimates as UhatHAT, DhatHAT, VhatHAT
+6)      compute canonical corrleation between Uhat and UhatHAT.  Same for Vhat.
