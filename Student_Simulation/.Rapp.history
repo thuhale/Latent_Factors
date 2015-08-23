@@ -1,0 +1,841 @@
+## Structure simulation using a rank-3 matrix, lambda = 590, lambda1=550, normalize by minus x#
+#resample#
+#
+rm(list=ls())#
+library(truncnorm)#
+library(XLConnect)#
+#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)
+# This code implements regularized spectral clustering for #
+# symmetric, directed, and bipartite (i.e. rectangular A).#
+# It has the following implemented:#
+# uses irlba package#
+# checks if symmetric (currently, uses svd either way)#
+# uses regularization#
+# project onto sphere#
+# use kmeans ++#
+# plots top eigenvalues and eigenvectors#
+# returns projected singular vectors and kmeans++ clusters.#
+#
+# TODO:#
+# 1) For symmetric calculations, it would be faster to find eigenvectors. #
+#     With current R libraries, it looks like one would need to use RcppEigen#
+#     to access the c++ library Eigen. Then, find the relevant function in that library.#
+# 2) Currently has adjMat as input.  Should also allow igraph object. #
+# 3) Allow several intializations of kmeans++#
+# 4) should we find k+1 eigenvalues to inspect the eigengap?#
+#
+#  irlba uses default parameters#
+#
+# Version 0.1.  Oct 17, 2014.  karlrohe@stat.wisc.edu#
+#
+library(irlba)#
+library(Matrix)#
+kmpp <- function(X, k) {#
+  # kmeans ++ #
+  # from https://stat.ethz.ch/pipermail/r-help/2012-January/300051.html#
+  # Hans Werner#
+  n <- nrow(X)#
+  C <- numeric(k)#
+  C[1] <- sample(1:n, 1)#
+  xx = rowSums(X^2)#
+  for (i in 2:k) {#
+    dm <- distmat(X,xx, X[C, ])#
+    pr <- apply(dm, 1, min); pr[C] <- 0#
+    C[i] <- sample(1:n, 1, prob = pr)#
+  }#
+  return(kmeans(X, X[C, ]))#
+}#
+#
+distmat = function(X,xx,y){#
+  #my code#
+  # used in kmpp to compute distances#
+  if(length(y) == ncol(X)){#
+    xy = X%*%y  #
+    yy = sum(y^2)#
+    # because of machine error, some zeros are -10^(-15).  Then, sqrt gives some errors +10^(-13) to make positive.#
+    dm = sqrt(xx + yy - 2*xy+ 10^(-13)) #
+  }#
+  if(length(y) != ncol(X)){#
+    xy = X%*%t(y)#
+    yy = rowSums(y^2)#
+    dm = sqrt(matrix(xx, ncol = length(yy), nrow = length(xx)) + matrix(yy, byrow = T,ncol = length(yy), nrow = length(xx)) -2* xy  + 10^(-13))#
+  }#
+  return(dm)    		#
+}#
+kmppi = function(X,k, inits =10){#
+  # allow for several restarts of kmeans++#
+  withss = sum(X^2)#
+  for(i in 1:inits){#
+    km = kmpp(X,k)#
+#     print(c(i,km$tot.withinss))#
+    if(km$tot.withinss < withss) {#
+      returnDat = km#
+      withss = returnDat$tot.withinss#
+    }#
+    print(i)#
+  } #
+  return(returnDat)#
+}#
+regspec = function(A, k, tau = -1, quiet = F){#
+  # A is a matrix or a Matrix.#
+  # k is the number of clusters.  If A is asymmetric, allows a 2 vector.  #
+  #   First element is number of sending clusters.  Second element is number of receiving clusters.#
+  # tau is regularization parameter.  Like k, it can be a 2 vectors.  Default is pretty good.  #
+  # This code currently uses the irlba package for both symmetric and asymmetric calculations.#
+  #  This finds a partial SVD.  #
+  # For symmetric calculations, it would be faster to find eigenvectors. #
+  #  irlba uses default parameters#
+  #   ensure arguments to function are reasonable#
+  sym = F#
+  if(!isSymmetric(object = A)) if(!quiet) print("adjacency matrix is not symmetric. So, this function will perform a directed analysis akin to di-sim.")#
+  if(isSymmetric(object = A)){#
+    sym = T#
+    if(length(k) > 1){#
+      if(!quiet) print("k is given more than one argument, but A is symmetric.")#
+      if(!quiet) print(paste("using k = ", k[1]))#
+      k = k[1]#
+    }#
+  }#
+  # compute the (regularized) graph Laplacian.#
+  nr = nrow(A); nc = ncol(A)#
+  rs = rowSums(A);  cs = colSums(A)#
+  if(tau <0)  tau = c(rs/nr, cs/nc)#
+  if(length(tau)==1) tau = c(tau,tau)#
+  Drow = Diagonal(n = nr, x = 1/sqrt(rs + tau[1]))#
+  Dcol = Diagonal(n = nc, x = 1/sqrt(cs + tau[2]))#
+  tmp = Drow%*%A#
+  L = tmp %*% Dcol#
+  K = min(k)#
+  # find the singular vectors#
+  s = irlba(L, nu = K, nv = K)#
+  # project singular vectors onto sphere#
+  # to prevent 0/0, the "projection" adds a bit in the denominator. #
+  nu= t(apply(s$u, 1, function(x, nr) return(x/sqrt(sum(x^2)+length(x)/(100*nr))), nr = nr))#
+  if(!sym) nv= t(apply(s$v, 1, function(x, nr) return(x/sqrt(sum(x^2) + length(x)/(100*nc) )), nr))#
+  # run kmeans++#
+  kmLeft = kmppi(X = nu, k[1])#
+#   kmLeft = kmeans(x = nu, centers = k[1],nstart =  100)#
+  kmLeft$nu = nu#
+  if(!sym) {#
+    if(length(k) ==2) kmRight = kmppi(X = nv, k[2])#
+    if(length(k) ==1) kmRight = kmppi(X = nv, k[1])#
+    kmRight$nv = nv#
+  }#
+  # create object that is returned.#
+  if(!sym) outDat = list(nu = nu, nv=nv, uclst = kmLeft$cluster, vclst = kmRight$cluster, ucent = kmLeft$center, vcent = kmRight$center)#
+  if(sym) outDat = list(nu = nu, uclst = kmLeft$cluster, ucent = kmLeft$center)#
+  if(!quiet){#
+    # make some plots.#
+    plot(-sort(-s$d)/sum(s$d), main = "top singular values")#
+    print("press 1 for plot of eigenvectors.")#
+    x = scan()#
+    if(x!=1) return(outDat)#
+    # if you want to plot the data, downsample to 1000 data points.#
+    if(nr > 1000){#
+      samp = sample(nr,1000)#
+    }#
+    if(nr<1001) samp = 1:nr#
+    if(sym) plot(as.data.frame(nu[samp,]), col = kmLeft$clust[samp], #
+                 main ="leading eigenvectors,\nprojected on sphere and colored by cluster")#
+    if(!sym) plot(as.data.frame(nu[samp,]), col = kmLeft$clust[samp], #
+                  main ="leading left singular vectors,\nprojected on sphere and colored by cluster")#
+  }#
+  return(outDat)#
+}
+regspec(B,2, -1)
+# This code implements regularized spectral clustering for #
+# symmetric, directed, and bipartite (i.e. rectangular A).#
+# It has the following implemented:#
+# uses irlba package#
+# checks if symmetric (currently, uses svd either way)#
+# uses regularization#
+# project onto sphere#
+# use kmeans ++#
+# plots top eigenvalues and eigenvectors#
+# returns projected singular vectors and kmeans++ clusters.#
+#
+# TODO:#
+# 1) For symmetric calculations, it would be faster to find eigenvectors. #
+#     With current R libraries, it looks like one would need to use RcppEigen#
+#     to access the c++ library Eigen. Then, find the relevant function in that library.#
+# 2) Currently has adjMat as input.  Should also allow igraph object. #
+# 3) Allow several intializations of kmeans++#
+# 4) should we find k+1 eigenvalues to inspect the eigengap?#
+#
+#  irlba uses default parameters#
+#
+# Version 0.1.  Oct 17, 2014.  karlrohe@stat.wisc.edu#
+#
+library(irlba)#
+library(Matrix)#
+kmpp <- function(X, k) {#
+  # kmeans ++ #
+  # from https://stat.ethz.ch/pipermail/r-help/2012-January/300051.html#
+  # Hans Werner#
+  n <- nrow(X)#
+  C <- numeric(k)#
+  C[1] <- sample(1:n, 1)#
+  xx = rowSums(X^2)#
+  for (i in 2:k) {#
+    dm <- distmat(X,xx, X[C, ])#
+    pr <- apply(dm, 1, min); pr[C] <- 0#
+    C[i] <- sample(1:n, 1, prob = pr)#
+  }#
+  return(kmeans(X, X[C, ]))#
+}#
+#
+distmat = function(X,xx,y){#
+  #my code#
+  # used in kmpp to compute distances#
+  if(length(y) == ncol(X)){#
+    xy = X%*%y  #
+    yy = sum(y^2)#
+    # because of machine error, some zeros are -10^(-15).  Then, sqrt gives some errors +10^(-13) to make positive.#
+    dm = sqrt(xx + yy - 2*xy+ 10^(-13)) #
+  }#
+  if(length(y) != ncol(X)){#
+    xy = X%*%t(y)#
+    yy = rowSums(y^2)#
+    dm = sqrt(matrix(xx, ncol = length(yy), nrow = length(xx)) + matrix(yy, byrow = T,ncol = length(yy), nrow = length(xx)) -2* xy  + 10^(-13))#
+  }#
+  return(dm)    		#
+}#
+kmppi = function(X,k, inits =10){#
+  # allow for several restarts of kmeans++#
+  withss = sum(X^2)#
+  for(i in 1:inits){#
+    km = kmpp(X,k)#
+#     print(c(i,km$tot.withinss))#
+    if(km$tot.withinss < withss) {#
+      returnDat = km#
+      withss = returnDat$tot.withinss#
+    }#
+    print(i)#
+  } #
+  return(returnDat)#
+}#
+regspec = function(A, k, tau = -1, quiet = F){#
+  # A is a matrix or a Matrix.#
+  # k is the number of clusters.  If A is asymmetric, allows a 2 vector.  #
+  #   First element is number of sending clusters.  Second element is number of receiving clusters.#
+  # tau is regularization parameter.  Like k, it can be a 2 vectors.  Default is pretty good.  #
+  # This code currently uses the irlba package for both symmetric and asymmetric calculations.#
+  #  This finds a partial SVD.  #
+  # For symmetric calculations, it would be faster to find eigenvectors. #
+  #  irlba uses default parameters#
+  #   ensure arguments to function are reasonable#
+  sym = F#
+  if(!isSymmetric(object = A)) if(!quiet) print("adjacency matrix is not symmetric. So, this function will perform a directed analysis akin to di-sim.")#
+  if(isSymmetric(object = A)){#
+    sym = T#
+    if(length(k) > 1){#
+      if(!quiet) print("k is given more than one argument, but A is symmetric.")#
+      if(!quiet) print(paste("using k = ", k[1]))#
+      k = k[1]#
+    }#
+  }#
+  # compute the (regularized) graph Laplacian.#
+  nr = nrow(A); nc = ncol(A)#
+  rs = rowSums(A);  cs = colSums(A)#
+  if(tau <0)  tau = c(rs/nr, cs/nc)#
+  if(length(tau)==1) tau = c(tau,tau)#
+  Drow = Diagonal(n = nr, x = 1/sqrt(rs + tau[1]))#
+  Dcol = Diagonal(n = nc, x = 1/sqrt(cs + tau[2]))#
+  tmp = Drow%*%A#
+  L = tmp %*% Dcol#
+  K = min(k)#
+  # find the singular vectors#
+  s = irlba(L, nu = K, nv = K)#
+  # project singular vectors onto sphere#
+  # to prevent 0/0, the "projection" adds a bit in the denominator. #
+  nu= t(apply(s$u, 1, function(x, nr) return(x/sqrt(sum(x^2)+length(x)/(100*nr))), nr = nr))#
+  if(!sym) nv= t(apply(s$v, 1, function(x, nr) return(x/sqrt(sum(x^2) + length(x)/(100*nc) )), nr))#
+  # run kmeans++#
+  kmLeft = kmppi(X = nu, k[1])#
+#   kmLeft = kmeans(x = nu, centers = k[1],nstart =  100)#
+  kmLeft$nu = nu#
+  if(!sym) {#
+    if(length(k) ==2) kmRight = kmppi(X = nv, k[2])#
+    if(length(k) ==1) kmRight = kmppi(X = nv, k[1])#
+    kmRight$nv = nv#
+  }#
+  # create object that is returned.#
+  if(!sym) outDat = list(nu = nu, nv=nv, uclst = kmLeft$cluster, vclst = kmRight$cluster, ucent = kmLeft$center, vcent = kmRight$center)#
+  if(sym) outDat = list(nu = nu, uclst = kmLeft$cluster, ucent = kmLeft$center)#
+  if(!quiet){#
+    # make some plots.#
+    plot(-sort(-s$d)/sum(s$d), main = "top singular values")#
+    print("press 1 for plot of eigenvectors.")#
+    x = scan()#
+    if(x!=1) return(outDat)#
+    # if you want to plot the data, downsample to 1000 data points.#
+    if(nr > 1000){#
+      samp = sample(nr,1000)#
+    }#
+    if(nr<1001) samp = 1:nr#
+    if(sym) plot(as.data.frame(nu[samp,]), col = kmLeft$clust[samp], #
+                 main ="leading eigenvectors,\nprojected on sphere and colored by cluster")#
+    if(!sym) plot(as.data.frame(nu[samp,]), col = kmLeft$clust[samp], #
+                  main ="leading left singular vectors,\nprojected on sphere and colored by cluster")#
+  }#
+  print(outDat)#
+  return(outDat)#
+}
+regspec(B,2, -1)
+library(devtools)#
+install_github("norbertbin/SpecClustPack")
+library(devtools)
+install_github("norbertbin/SpecClustPack")
+rm(list=ls())#
+library(truncnorm)#
+library(XLConnect)#
+#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)
+clusters = specClust(B, nBlocks = 2)
+#' Performs spectral clustering on an adjacency matrix.#
+#'#
+#' @param adjMat A graph adjacency matrix.#
+#' @param nBlocks The number of clusters in the graph.#
+#' @param method The form of the ajacency matrix to be used (default is#
+#' regLaplacian).#
+#' @param rowNorm If true, eigenvector rows should be normalized before#
+#' running kmeans (default is true).#
+#' @param nIter Number of kmeans iterations (default is 10).#
+#' @param verbose If true, return a list with cluster assignments, within#
+#' cluster sum of squares, and eigendecomposition (default is false). #
+#'#
+#' @export#
+#' @return A vector of node cluster assignments. Or, if verbose is set to true#
+#' a list with cluster assignments and additional information.#
+#'#
+#' @keywords spectral clustering#
+specClust <- function(adjMat, nBlocks, method = "regLaplacian",#
+                             rowNorm = T, nIter = 20, verbose = F) {#
+    # eigs does not support dsCMatrix type at this time#
+    # Matrix has Namespace problems when using dsCMatrix#
+    adjMat = as(adjMat, "dgCMatrix")#
+#
+    similarityMat = getSimilarityMat(adjMat, method)#
+#
+    # eigsDecomp = eigs(similarityMat, nBlocks + 3)#
+#
+    eigsDecomp = irlba(similarityMat, nu = nBlocks + 1, nv = 0, #
+        m_b = max(20, 2*nBlocks))#
+    eigsDecomp = list(vectors = eigsDecomp$u,  values = eigsDecomp$d)#
+#
+    if(rowNorm == T) {#
+        eigsDecomp$vectors[,1:nBlocks] = eigsDecomp$vectors[,1:nBlocks] /#
+            sqrt(rowSums(eigsDecomp$vectors[,1:nBlocks]^2))#
+#
+        # if there were rows of zeros need to handle NaN's#
+        eigsDecomp$vectors[is.nan(eigsDecomp$vectors)] = 0#
+    }#
+    kmeansResult = bigkmeans(eigsDecomp$vectors[,1:nBlocks], nBlocks,#
+        nstart = nIter)#
+#
+    if(verbose == T) {#
+        return( list(cluster = kmeansResult$cluster,#
+                     wcss = kmeansResult$tot.withinss,#
+                     eigenVals = eigsDecomp$values[1:(nBlocks+1)],#
+                     eigenVecs = eigsDecomp$vectors[,1:(nBlocks+1)]) )#
+    } else {#
+        return(kmeansResult$cluster)#
+    }#
+}#
+#
+#' Spectral clustering of a covariate matrix (low rank).#
+#'#
+#' @param covMat A matrix of covariates with each column corresponding to#
+#' a covariate.#
+#' @param nBlocks The number of clusters.#
+#' @param nIter Number of kmeans iterations (default is 10).#
+#' @param center A boolean indicating if the covariate matrix columns should#
+#' be centered.#
+#'#
+#' @export#
+#' @return Returns a vector of row cluster assignments.#
+#'#
+#' @examples#
+#' covProbMat = matrix(c(.6, .2, .2, .6), nrow = 2)#
+#' nMembers = c(50, 50)#
+#' covMat = simBernCovar(covProbMat, nMembers)#
+#' specClustCov(covMat, nBlocks = 2)#
+specClustCov <- function(covMat, nBlocks, nIter = 20, center = F, jit = F) {#
+#
+    #center and normalize columns#
+    covMat = scale(covMat, center = center,#
+        scale = sqrt(Matrix::colSums(covMat^2)))    #
+    svdDecomp = svd(covMat)#
+#
+    # if the number of unique centers in the data is not much greater#
+    # than nIter bigkmeans throws an error, to prevent this jitter first col#
+    if(jit == T) {#
+        svdDecomp$u[,1] = jitter(svdDecomp$u[,1])#
+    }#
+    kmeansResult = bigkmeans(svdDecomp$u[,1:nBlocks], nBlocks,#
+        nstart = nIter)#
+    return(kmeansResult$cluster)#
+}#
+#
+# ---------------------------------------------------------------------#
+# Helper methods#
+# ---------------------------------------------------------------------#
+#
+# ---------------------------------------------------------------------#
+# Returns the graph similarity matrix corresponding to the given method#
+# ---------------------------------------------------------------------#
+getSimilarityMat <- function(adjMat, method) {#
+    if(method == "regLaplacian") {#
+        rSums = Matrix::rowSums(adjMat)#
+        tau = mean(rSums)#
+        normMat = Diagonal(length(rSums), 1/sqrt(rSums + tau))#
+        return(normMat %*% adjMat %*% normMat)#
+    }#
+    else if(method == "laplacian") {#
+        rSums = Matrix::rowSums(adjMat)#
+        normMat = Diagonal(length(rSums), 1/sqrt(rSums))#
+        return(normMat %*% adjMat %*% normMat)#
+    }#
+    else if(method == "adjacency"){#
+        return(adjMat)#
+    }#
+    else {#
+        stop(paste("Error: method =", method, "Not valid"))#
+    }#
+}
+clusters = specClust(B, nBlocks = 2)
+plot(B)
+B[1:@]
+B[1:2,]
+A = B
+A[B==TRUE]=1
+A[B==FALSE]=0
+clusters = specClust(B, nBlocks = 2)
+clusters = specClust(A, nBlocks = 2)
+A
+plot(A)
+library(Matrix)
+C = as(A, "dgCMatrix")
+C
+clusters = specClust(C, nBlocks = 2)
+# This code implements regularized spectral clustering for #
+# symmetric, directed, and bipartite (i.e. rectangular A).#
+# It has the following implemented:#
+# uses irlba package#
+# checks if symmetric (currently, uses svd either way)#
+# uses regularization#
+# project onto sphere#
+# use kmeans ++#
+# plots top eigenvalues and eigenvectors#
+# returns projected singular vectors and kmeans++ clusters.#
+#
+# TODO:#
+# 1) For symmetric calculations, it would be faster to find eigenvectors. #
+#     With current R libraries, it looks like one would need to use RcppEigen#
+#     to access the c++ library Eigen. Then, find the relevant function in that library.#
+# 2) Currently has adjMat as input.  Should also allow igraph object. #
+# 3) Allow several intializations of kmeans++#
+# 4) should we find k+1 eigenvalues to inspect the eigengap?#
+#
+#  irlba uses default parameters#
+#
+# Version 0.1.  Oct 17, 2014.  karlrohe@stat.wisc.edu#
+#
+library(irlba)#
+library(Matrix)#
+kmpp <- function(X, k) {#
+  # kmeans ++ #
+  # from https://stat.ethz.ch/pipermail/r-help/2012-January/300051.html#
+  # Hans Werner#
+  n <- nrow(X)#
+  C <- numeric(k)#
+  C[1] <- sample(1:n, 1)#
+  xx = rowSums(X^2)#
+  for (i in 2:k) {#
+    dm <- distmat(X,xx, X[C, ])#
+    pr <- apply(dm, 1, min); pr[C] <- 0#
+    C[i] <- sample(1:n, 1, prob = pr)#
+  }#
+  return(kmeans(X, X[C, ]))#
+}#
+#
+distmat = function(X,xx,y){#
+  #my code#
+  # used in kmpp to compute distances#
+  if(length(y) == ncol(X)){#
+    xy = X%*%y  #
+    yy = sum(y^2)#
+    # because of machine error, some zeros are -10^(-15).  Then, sqrt gives some errors +10^(-13) to make positive.#
+    dm = sqrt(xx + yy - 2*xy+ 10^(-13)) #
+  }#
+  if(length(y) != ncol(X)){#
+    xy = X%*%t(y)#
+    yy = rowSums(y^2)#
+    dm = sqrt(matrix(xx, ncol = length(yy), nrow = length(xx)) + matrix(yy, byrow = T,ncol = length(yy), nrow = length(xx)) -2* xy  + 10^(-13))#
+  }#
+  return(dm)    		#
+}#
+kmppi = function(X,k, inits =10){#
+  # allow for several restarts of kmeans++#
+  withss = sum(X^2)#
+  for(i in 1:inits){#
+    km = kmpp(X,k)#
+#     print(c(i,km$tot.withinss))#
+    if(km$tot.withinss < withss) {#
+      returnDat = km#
+      withss = returnDat$tot.withinss#
+    }#
+    print(i)#
+  } #
+  return(returnDat)#
+}#
+regspec = function(A, k, tau = -1, quiet = F){#
+  # A is a matrix or a Matrix.#
+  # k is the number of clusters.  If A is asymmetric, allows a 2 vector.  #
+  #   First element is number of sending clusters.  Second element is number of receiving clusters.#
+  # tau is regularization parameter.  Like k, it can be a 2 vectors.  Default is pretty good.  #
+  # This code currently uses the irlba package for both symmetric and asymmetric calculations.#
+  #  This finds a partial SVD.  #
+  # For symmetric calculations, it would be faster to find eigenvectors. #
+  #  irlba uses default parameters#
+  #   ensure arguments to function are reasonable#
+  sym = F#
+  if(!isSymmetric(object = A)) if(!quiet) print("adjacency matrix is not symmetric. So, this function will perform a directed analysis akin to di-sim.")#
+  if(isSymmetric(object = A)){#
+    sym = T#
+    if(length(k) > 1){#
+      if(!quiet) print("k is given more than one argument, but A is symmetric.")#
+      if(!quiet) print(paste("using k = ", k[1]))#
+      k = k[1]#
+    }#
+  }#
+  # compute the (regularized) graph Laplacian.#
+  nr = nrow(A); nc = ncol(A)#
+  rs = rowSums(A);  cs = colSums(A)#
+  if(tau <0)  tau = c(rs/nr, cs/nc)#
+  if(length(tau)==1) tau = c(tau,tau)#
+  Drow = Diagonal(n = nr, x = 1/sqrt(rs + tau[1]))#
+  Dcol = Diagonal(n = nc, x = 1/sqrt(cs + tau[2]))#
+  tmp = Drow%*%A#
+  L = tmp %*% Dcol#
+  K = min(k)#
+  # find the singular vectors#
+  s = irlba(L, nu = K, nv = K)#
+  # project singular vectors onto sphere#
+  # to prevent 0/0, the "projection" adds a bit in the denominator. #
+  nu= t(apply(s$u, 1, function(x, nr) return(x/sqrt(sum(x^2)+length(x)/(100*nr))), nr = nr))#
+  if(!sym) nv= t(apply(s$v, 1, function(x, nr) return(x/sqrt(sum(x^2) + length(x)/(100*nc) )), nr))#
+  # run kmeans++#
+  kmLeft = kmppi(X = nu, k[1])#
+#   kmLeft = kmeans(x = nu, centers = k[1],nstart =  100)#
+  kmLeft$nu = nu#
+  if(!sym) {#
+    if(length(k) ==2) kmRight = kmppi(X = nv, k[2])#
+    if(length(k) ==1) kmRight = kmppi(X = nv, k[1])#
+    kmRight$nv = nv#
+  }#
+  # create object that is returned.#
+  if(!sym) outDat = list(nu = nu, nv=nv, uclst = kmLeft$cluster, vclst = kmRight$cluster, ucent = kmLeft$center, vcent = kmRight$center)#
+  if(sym) outDat = list(nu = nu, uclst = kmLeft$cluster, ucent = kmLeft$center)#
+  if(!quiet){#
+    # make some plots.#
+    plot(-sort(-s$d)/sum(s$d), main = "top singular values")#
+    print("press 1 for plot of eigenvectors.")#
+    x = scan()#
+    if(x!=1) return(outDat)#
+    # if you want to plot the data, downsample to 1000 data points.#
+    if(nr > 1000){#
+      samp = sample(nr,1000)#
+    }#
+    if(nr<1001) samp = 1:nr#
+    if(sym) plot(as.data.frame(nu[samp,]), col = kmLeft$clust[samp], #
+                 main ="leading eigenvectors,\nprojected on sphere and colored by cluster")#
+    if(!sym) plot(as.data.frame(nu[samp,]), col = kmLeft$clust[samp], #
+                  main ="leading left singular vectors,\nprojected on sphere and colored by cluster")#
+  }#
+  print(outDat)#
+  return(outDat)#
+}
+regspec(A,2, tau=-1, quiet=F)
+H=B#
+H(is.na(B))=0#
+H(!is.na(B))=1#
+blank_student = matrix(0, nrow=1276, ncol = 1276)#
+blank_teacher = matrix(0, nrow=72, ncol = 72)
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+dim(x)#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+B = B[-badstu,]#
+B = B[,-badtea]#
+H=B#
+H(is.na(B))=0#
+H(!is.na(B))=1#
+blank_student = matrix(0, nrow=1276, ncol = 1276)#
+blank_teacher = matrix(0, nrow=72, ncol = 72)
+H=B#
+H[is.na(B)]=0#
+H[!is.na(B)]=1#
+blank_student = matrix(0, nrow=1276, ncol = 1276)#
+blank_teacher = matrix(0, nrow=72, ncol = 72)
+A1=cbind(blank_student,B)
+dim(A1)
+A2=cbind(t(B), blank_teacher)
+dim(A2)
+A=rbind(A1,A2)
+dim(A)
+regspec(A,2, tau=-1, quiet=F)
+# This code implements regularized spectral clustering for #
+# symmetric, directed, and bipartite (i.e. rectangular A).#
+# It has the following implemented:#
+# uses irlba package#
+# checks if symmetric (currently, uses svd either way)#
+# uses regularization#
+# project onto sphere#
+# use kmeans ++#
+# plots top eigenvalues and eigenvectors#
+# returns projected singular vectors and kmeans++ clusters.#
+#
+# TODO:#
+# 1) For symmetric calculations, it would be faster to find eigenvectors. #
+#     With current R libraries, it looks like one would need to use RcppEigen#
+#     to access the c++ library Eigen. Then, find the relevant function in that library.#
+# 2) Currently has adjMat as input.  Should also allow igraph object. #
+# 3) Allow several intializations of kmeans++#
+# 4) should we find k+1 eigenvalues to inspect the eigengap?#
+#
+#  irlba uses default parameters#
+#
+# Version 0.1.  Oct 17, 2014.  karlrohe@stat.wisc.edu#
+#
+library(irlba)#
+library(Matrix)#
+kmpp <- function(X, k) {#
+  # kmeans ++ #
+  # from https://stat.ethz.ch/pipermail/r-help/2012-January/300051.html#
+  # Hans Werner#
+  n <- nrow(X)#
+  C <- numeric(k)#
+  C[1] <- sample(1:n, 1)#
+  xx = rowSums(X^2)#
+  for (i in 2:k) {#
+    dm <- distmat(X,xx, X[C, ])#
+    pr <- apply(dm, 1, min); pr[C] <- 0#
+    C[i] <- sample(1:n, 1, prob = pr)#
+  }#
+  return(kmeans(X, X[C, ]))#
+}#
+#
+distmat = function(X,xx,y){#
+  #my code#
+  # used in kmpp to compute distances#
+  if(length(y) == ncol(X)){#
+    xy = X%*%y  #
+    yy = sum(y^2)#
+    # because of machine error, some zeros are -10^(-15).  Then, sqrt gives some errors +10^(-13) to make positive.#
+    dm = sqrt(xx + yy - 2*xy+ 10^(-13)) #
+  }#
+  if(length(y) != ncol(X)){#
+    xy = X%*%t(y)#
+    yy = rowSums(y^2)#
+    dm = sqrt(matrix(xx, ncol = length(yy), nrow = length(xx)) + matrix(yy, byrow = T,ncol = length(yy), nrow = length(xx)) -2* xy  + 10^(-13))#
+  }#
+  return(dm)    		#
+}#
+kmppi = function(X,k, inits =10){#
+  # allow for several restarts of kmeans++#
+  withss = sum(X^2)#
+  for(i in 1:inits){#
+    km = kmpp(X,k)#
+#     print(c(i,km$tot.withinss))#
+    if(km$tot.withinss < withss) {#
+      returnDat = km#
+      withss = returnDat$tot.withinss#
+    }#
+  } #
+  return(returnDat)#
+}#
+regspec = function(A, k, tau = -1, quiet = F){#
+  # A is a matrix or a Matrix.#
+  # k is the number of clusters.  If A is asymmetric, allows a 2 vector.  #
+  #   First element is number of sending clusters.  Second element is number of receiving clusters.#
+  # tau is regularization parameter.  Like k, it can be a 2 vectors.  Default is pretty good.  #
+  # This code currently uses the irlba package for both symmetric and asymmetric calculations.#
+  #  This finds a partial SVD.  #
+  # For symmetric calculations, it would be faster to find eigenvectors. #
+  #  irlba uses default parameters#
+  #   ensure arguments to function are reasonable#
+  sym = F#
+  if(!isSymmetric(object = A)) if(!quiet) print("adjacency matrix is not symmetric. So, this function will perform a directed analysis akin to di-sim.")#
+  if(isSymmetric(object = A)){#
+    sym = T#
+    if(length(k) > 1){#
+      if(!quiet) print("k is given more than one argument, but A is symmetric.")#
+      if(!quiet) print(paste("using k = ", k[1]))#
+      k = k[1]#
+    }#
+  }#
+  # compute the (regularized) graph Laplacian.#
+  nr = nrow(A); nc = ncol(A)#
+  rs = rowSums(A);  cs = colSums(A)#
+  if(tau <0)  tau = c(rs/nr, cs/nc)#
+  if(length(tau)==1) tau = c(tau,tau)#
+  Drow = Diagonal(n = nr, x = 1/sqrt(rs + tau[1]))#
+  Dcol = Diagonal(n = nc, x = 1/sqrt(cs + tau[2]))#
+  tmp = Drow%*%A#
+  L = tmp %*% Dcol#
+  K = min(k)#
+  # find the singular vectors#
+  s = irlba(L, nu = K, nv = K)#
+  # project singular vectors onto sphere#
+  # to prevent 0/0, the "projection" adds a bit in the denominator. #
+  nu= t(apply(s$u, 1, function(x, nr) return(x/sqrt(sum(x^2)+length(x)/(100*nr))), nr = nr))#
+  if(!sym) nv= t(apply(s$v, 1, function(x, nr) return(x/sqrt(sum(x^2) + length(x)/(100*nc) )), nr))#
+  # run kmeans++#
+  kmLeft = kmppi(X = nu, k[1])#
+#   kmLeft = kmeans(x = nu, centers = k[1],nstart =  100)#
+  kmLeft$nu = nu#
+  if(!sym) {#
+    if(length(k) ==2) kmRight = kmppi(X = nv, k[2])#
+    if(length(k) ==1) kmRight = kmppi(X = nv, k[1])#
+    kmRight$nv = nv#
+  }#
+  # create object that is returned.#
+  if(!sym) outDat = list(nu = nu, nv=nv, uclst = kmLeft$cluster, vclst = kmRight$cluster, ucent = kmLeft$center, vcent = kmRight$center)#
+  if(sym) outDat = list(nu = nu, uclst = kmLeft$cluster, ucent = kmLeft$center)#
+  if(!quiet){#
+    # make some plots.#
+    plot(-sort(-s$d)/sum(s$d), main = "top singular values")#
+    print("press 1 for plot of eigenvectors.")#
+    x = scan()#
+    if(x!=1) return(outDat)#
+    # if you want to plot the data, downsample to 1000 data points.#
+    if(nr > 1000){#
+      samp = sample(nr,1000)#
+    }#
+    if(nr<1001) samp = 1:nr#
+    if(sym) plot(as.data.frame(nu[samp,]), col = kmLeft$clust[samp], #
+                 main ="leading eigenvectors,\nprojected on sphere and colored by cluster")#
+    if(!sym) plot(as.data.frame(nu[samp,]), col = kmLeft$clust[samp], #
+                  main ="leading left singular vectors,\nprojected on sphere and colored by cluster")#
+  }#
+  return(outDat)#
+}
+regspec(A,2, tau=-1, quiet=F)
+regspec = function(A, k, tau = -1, quiet = F){#
+  # A is a matrix or a Matrix.#
+  # k is the number of clusters.  If A is asymmetric, allows a 2 vector.  #
+  #   First element is number of sending clusters.  Second element is number of receiving clusters.#
+  # tau is regularization parameter.  Like k, it can be a 2 vectors.  Default is pretty good.  #
+  # This code currently uses the irlba package for both symmetric and asymmetric calculations.#
+  #  This finds a partial SVD.  #
+  # For symmetric calculations, it would be faster to find eigenvectors. #
+  #  irlba uses default parameters#
+  #   ensure arguments to function are reasonable#
+  sym = F#
+  if(!isSymmetric(object = A)) if(!quiet) print("adjacency matrix is not symmetric. So, this function will perform a directed analysis akin to di-sim.")#
+  if(isSymmetric(object = A)){#
+    sym = T#
+    if(length(k) > 1){#
+      if(!quiet) print("k is given more than one argument, but A is symmetric.")#
+      if(!quiet) print(paste("using k = ", k[1]))#
+      k = k[1]#
+    }#
+  }#
+  # compute the (regularized) graph Laplacian.#
+  nr = nrow(A); nc = ncol(A)#
+  rs = rowSums(A);  cs = colSums(A)#
+  if(tau <0)  tau = c(rs/nr, cs/nc)#
+  if(length(tau)==1) tau = c(tau,tau)#
+  Drow = Diagonal(n = nr, x = 1/sqrt(rs + tau[1]))#
+  Dcol = Diagonal(n = nc, x = 1/sqrt(cs + tau[2]))#
+  tmp = Drow%*%A#
+  L = tmp %*% Dcol#
+  K = min(k)#
+  # find the singular vectors#
+  s = irlba(L, nu = K, nv = K)#
+  # project singular vectors onto sphere#
+  # to prevent 0/0, the "projection" adds a bit in the denominator. #
+  nu= t(apply(s$u, 1, function(x, nr) return(x/sqrt(sum(x^2)+length(x)/(100*nr))), nr = nr))#
+  if(!sym) nv= t(apply(s$v, 1, function(x, nr) return(x/sqrt(sum(x^2) + length(x)/(100*nc) )), nr))#
+  # run kmeans++#
+  kmLeft = kmppi(X = nu, k[1])#
+#   kmLeft = kmeans(x = nu, centers = k[1],nstart =  100)#
+  kmLeft$nu = nu#
+  if(!sym) {#
+    if(length(k) ==2) kmRight = kmppi(X = nv, k[2])#
+    if(length(k) ==1) kmRight = kmppi(X = nv, k[1])#
+    kmRight$nv = nv#
+  }#
+  # create object that is returned.#
+  if(!sym) outDat = list(nu = nu, nv=nv, uclst = kmLeft$cluster, vclst = kmRight$cluster, ucent = kmLeft$center, vcent = kmRight$center)#
+  if(sym) outDat = list(nu = nu, uclst = kmLeft$cluster, ucent = kmLeft$center)#
+  if(!quiet){#
+    # make some plots.#
+    #plot(-sort(-s$d)/sum(s$d), main = "top singular values")#
+    print("press 1 for plot of eigenvectors.")#
+    x = scan()#
+    if(x!=1) return(outDat)#
+    # if you want to plot the data, downsample to 1000 data points.#
+    if(nr > 1000){#
+      samp = sample(nr,1000)#
+    }#
+    if(nr<1001) samp = 1:nr#
+    if(sym) plot(as.data.frame(nu[samp,]), col = kmLeft$clust[samp], #
+                 main ="leading eigenvectors,\nprojected on sphere and colored by cluster")#
+    if(!sym) plot(as.data.frame(nu[samp,]), col = kmLeft$clust[samp], #
+                  main ="leading left singular vectors,\nprojected on sphere and colored by cluster")#
+  }#
+  return(outDat)#
+}
+regspec(A,2, tau=-1, quiet=F)
+specClustCov(A)
+C = as(A, "dgCMatrix")
+specClustCov(C)
+library(biganalytics)
+specClustCov(C)
+specClustCov(C,20)
+specClustCov(C,2)
+misClustRate(clusters, nMembers)
+getSimilarityMat(C,"regLaplacian")
