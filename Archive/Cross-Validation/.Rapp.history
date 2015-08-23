@@ -1,0 +1,1861 @@
+s$d
+lam = 300#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}#
+	prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+rmse
+s$d
+lam = 350#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}#
+	prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}
+s$d
+rmse
+## Cross validation using the model: m_{jj} = mu+a_i+b_j#
+## First normalize the matrix, N_{ij} = W_i - a_j - b_j + mu#
+## Perform IFA on  N#
+## Recover W#
+## Use rank-3 matrix, lam = 350#
+rm(list=ls())#
+library(truncnorm)#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)#
+#
+##Cross-validation sampling#
+#
+obsSample = function(m,n){#
+	obs = which(!is.na(m), F)#
+	pos=sample(obs,n, replace=F)#
+	return(pos)#
+}#
+temp = G#
+error = c(1:405)#
+easy = c(1:405)#
+easier = c(1:405)#
+n=10
+x=c(1:1276)#
+	y=c(1:72)#
+	pos=obsSample(temp, n)#
+	validation = temp[pos]#
+	temp[pos]=NA#
+	W=G#
+	W[pos]=NA#
+	for (i in 1:1276){#
+		student = W[i,]#
+		x[i]=mean(student[!is.na(student)])#
+	}#
+	for (j in 1:72){#
+		teacher = W[,j]#
+		y[j] = mean(teacher[!is.na(teacher)])#
+	}#
+	z=mean(W[!is.na(W)])#
+	N = W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			N[i,j]=N[i,j]-x[i]-y[j]+z#
+		}#
+	}#
+	N[is.na(W)] = NA#
+	thresh = function(a, lam){#
+	a = a - lam#
+	a[a<0] = 0#
+	return(a)#
+	}#
+	lam = 350#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}#
+	prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}#
+#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+rmse
+##2-way anove#
+	K=W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			K[i,j]= x[i]+y[j]-z#
+		}#
+	}#
+	easy_recovery = sqrt(sum((G[pos]-K[pos])^2)/n)/mean(G[pos])#
+	easy[l] = easy_recovery
+easy_recovery
+Average = z#
+	easier_recovery = sqrt(sum((G[pos]-Average[pos])^2)/n)/mean(G[pos])
+easier_recovery
+Average[pos]
+Average = z
+Average[pos]
+z
+easier_recovery = sqrt(sum((G[pos]-z)^2)/n)/mean(G[pos])
+easier_recovery
+K=W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			K[i,j]= x[i]+y[j]-z#
+		}#
+	}
+easy_recovery = sqrt(sum((G[pos]-K[pos])^2)/n)/mean(G[pos])
+easy_recovery
+easier_recovery = sqrt(sum((G[pos]-z)^2)/n)/mean(G[pos])
+easier_recovery
+pos=obsSample(temp, n)#
+	validation = temp[pos]#
+	temp[pos]=NA#
+	W=G#
+	W[pos]=NA#
+	for (i in 1:1276){#
+		student = W[i,]#
+		x[i]=mean(student[!is.na(student)])#
+	}#
+	for (j in 1:72){#
+		teacher = W[,j]#
+		y[j] = mean(teacher[!is.na(teacher)])#
+	}#
+	z=mean(W[!is.na(W)])#
+	N = W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			N[i,j]=N[i,j]-x[i]-y[j]+z#
+		}#
+	}#
+	N[is.na(W)] = NA#
+	thresh = function(a, lam){#
+	a = a - lam#
+	a[a<0] = 0#
+	return(a)#
+	}
+K=W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			K[i,j]= x[i]+y[j]-z#
+		}#
+	}#
+	easy_recovery = sqrt(sum((G[pos]-K[pos])^2)/n)/mean(G[pos])
+easy_recovery
+easier_recovery = sqrt(sum((G[pos]-z)^2)/n)/mean(G[pos])
+easier_recovery
+G[pos]
+z
+sum((G[pos]-z)^2)
+Average = W#
+	Average[is.na(Aeverage)] = z#
+	easier_recovery = sqrt(sum((G[pos]-Average[pos])^2)/n)/mean(G[pos])
+Average = W#
+	Average[is.na(Average)] = z#
+	easier_recovery = sqrt(sum((G[pos]-Average[pos])^2)/n)/mean(G[pos])
+easier_recovery
+## Cross validation using the model: m_{jj} = mu#
+rm(list=ls())#
+library(truncnorm)#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)#
+##Cross-validation sampling#
+#
+obsSample = function(m,n){#
+	obs = which(!is.na(m), F)#
+	pos=sample(obs,n, replace=F)#
+	return(pos)#
+}#
+#
+temp = G#
+error = c(1:405)#
+n=10
+x=c(1:1276)#
+	y=c(1:72)#
+	pos=obsSample(temp, n)#
+	validation = temp[pos]#
+	temp[pos]=NA#
+	W=G#
+	W[pos]=NA#
+#
+	z=mean(W[!is.na(W)])#
+	prediction = W#
+	prediction[is.na(prediction)]=z#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+rmse
+x=c(1:1276)#
+	y=c(1:72)#
+	pos=obsSample(temp, n)#
+	validation = temp[pos]#
+	temp[pos]=NA#
+	W=G#
+	W[pos]=NA#
+#
+	z=mean(W[!is.na(W)])#
+	prediction = W#
+	prediction[is.na(prediction)]=z#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+rmse
+x=c(1:1276)#
+	y=c(1:72)#
+	pos=obsSample(temp, n)#
+	validation = temp[pos]#
+	temp[pos]=NA#
+	W=G#
+	W[pos]=NA#
+	for (i in 1:1276){#
+		student = W[i,]#
+		x[i]=mean(student[!is.na(student)])#
+	}#
+	for (j in 1:72){#
+		teacher = W[,j]#
+		y[j] = mean(teacher[!is.na(teacher)])#
+	}#
+	z=mean(W[!is.na(W)])
+K=W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			K[i,j]= x[i]+y[j]-z#
+		}#
+	}#
+	easy_recovery = sqrt(sum((G[pos]-K[pos])^2)/n)/mean(G[pos])
+easy_recovery
+Average = W#
+	Average[is.na(Average)] = z#
+	easier_recovery = sqrt(sum((G[pos]-K[pos])^2)/n)/mean(G[pos])
+easier_recovery
+easier_recovery = sqrt(sum((G[pos]-Average[pos])^2)/n)/mean(G[pos])
+easier_recovery
+for (i in 1:1276){#
+		student = W[i,]#
+		x[i]=mean(student[!is.na(student)])#
+	}#
+	for (j in 1:72){#
+		teacher = W[,j]#
+		y[j] = mean(teacher[!is.na(teacher)])#
+	}#
+	z=mean(W[!is.na(W)])#
+	N = W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			N[i,j]=N[i,j]-x[i]-y[j]+z#
+		}#
+	}#
+	N[is.na(W)] = NA#
+	thresh = function(a, lam){#
+	a = a - lam#
+	a[a<0] = 0#
+	return(a)#
+	}#
+	lam = 350#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}#
+	prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}#
+#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+rmse
+s$d
+lam = 400#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}#
+	prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}#
+#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+s$d
+rmse
+lam = 320#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}#
+	prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}
+rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+rmse
+s$d
+lam = 330#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}#
+	prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}#
+#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+rmse
+s$d
+lam = 340#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}#
+	prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}
+s$d
+rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+rmse
+rm(list=ls())#
+library(truncnorm)#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)#
+#
+##Cross-validation sampling#
+#
+obsSample = function(m,n){#
+	obs = which(!is.na(m), F)#
+	pos=sample(obs,n, replace=F)#
+	return(pos)#
+}#
+temp = G#
+error = c(1:405)#
+easy = c(1:405)#
+easier = c(1:405)#
+n=10#
+#
+for (l in 1:405){#
+	x=c(1:1276)#
+	y=c(1:72)#
+	pos=obsSample(temp, n)#
+	validation = temp[pos]#
+	temp[pos]=NA#
+	W=G#
+	W[pos]=NA#
+	for (i in 1:1276){#
+		student = W[i,]#
+		x[i]=mean(student[!is.na(student)])#
+	}#
+	for (j in 1:72){#
+		teacher = W[,j]#
+		y[j] = mean(teacher[!is.na(teacher)])#
+	}#
+	z=mean(W[!is.na(W)])#
+	N = W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			N[i,j]=N[i,j]-x[i]-y[j]+z#
+		}#
+	}#
+	N[is.na(W)] = NA#
+	thresh = function(a, lam){#
+	a = a - lam#
+	a[a<0] = 0#
+	return(a)#
+	}#
+	lam = 400#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}#
+	prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}#
+#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+x=c(1:1276)#
+	y=c(1:72)#
+	pos=obsSample(temp, n)#
+	validation = temp[pos]#
+	temp[pos]=NA#
+	W=G#
+	W[pos]=NA#
+	for (i in 1:1276){#
+		student = W[i,]#
+		x[i]=mean(student[!is.na(student)])#
+	}#
+	for (j in 1:72){#
+		teacher = W[,j]#
+		y[j] = mean(teacher[!is.na(teacher)])#
+	}#
+	z=mean(W[!is.na(W)])#
+	N = W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			N[i,j]=N[i,j]-x[i]-y[j]+z#
+		}#
+	}#
+	N[is.na(W)] = NA#
+	thresh = function(a, lam){#
+	a = a - lam#
+	a[a<0] = 0#
+	return(a)#
+	}#
+	lam = 400#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}#
+	prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}#
+#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+s$d
+rmse
+error[l]=rmse
+K=W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			K[i,j]= x[i]+y[j]-z#
+		}#
+	}#
+	easy_recovery = sqrt(sum((G[pos]-K[pos])^2)/n)/mean(G[pos])
+easy_recovery
+library(ggplot2)#
+lrmc= read.csv("rmse-9.csv")#
+easy= read.csv("easy-9.csv")#
+easier= read.csv("easier-9.csv")
+lrmc = lrmc[,-1]#
+length(lrmc)#
+mean(lrmc)#
+hist(lrmc, col = "steelblue1", ylab = "Frequency", xlab = "", main ="")
+mean(lrm)
+mean(lrmc)
+mean(lrmc[!is.na(lrmc)])
+mean(easy[!is.na(easy)])
+easier = easier[,-1]
+easy = easy[,-1]
+mean(easy)
+mean(easy[!is.na(easy)])
+mean(easier[!is.na(easy)])
+## Cross validation using the model: m_{jj} = mu+a_i+b_j#
+## First normalize the matrix, N_{ij} = W_i - a_j - b_j + mu#
+## Perform IFA on  N#
+## Recover W#
+## Use rank-3 matrix, lam = 340#
+rm(list=ls())#
+library(truncnorm)#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)#
+#
+##Cross-validation sampling#
+#
+obsSample = function(m,n){#
+	obs = which(!is.na(m), F)#
+	pos=sample(obs,n, replace=F)#
+	return(pos)#
+}#
+temp = G#
+error = c(1:405)#
+easy = c(1:405)#
+easier = c(1:405)#
+n=10
+y=c(1:72)#
+	pos=obsSample(temp, n)#
+	validation = temp[pos]#
+	temp[pos]=NA#
+	W=G#
+	W[pos]=NA#
+	for (i in 1:1276){#
+		student = W[i,]#
+		x[i]=mean(student[!is.na(student)])#
+	}#
+	for (j in 1:72){#
+		teacher = W[,j]#
+		y[j] = mean(teacher[!is.na(teacher)])#
+	}#
+	z=mean(W[!is.na(W)])#
+	N = W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			N[i,j]=N[i,j]-x[i]-y[j]+z#
+		}#
+	}#
+	N[is.na(W)] = NA
+thresh = function(a, lam){#
+	a = a - lam#
+	a[a<0] = 0#
+	return(a)#
+	}#
+	lam = 300#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}#
+	prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}#
+#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+s$d
+rmse
+K=W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			K[i,j]= x[i]+y[j]-z#
+		}#
+	}#
+	easy_recovery = sqrt(sum((G[pos]-K[pos])^2)/n)/mean(G[pos])
+easy_recovery
+lam = 340#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}
+s$d
+rmse
+prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}#
+#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+rmse
+lam = 200#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}#
+	prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}#
+#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+library(ggplot2)#
+lrmc= read.csv("rmse-9.csv")#
+easy= read.csv("easy-9.csv")#
+easier= read.csv("easier-9.csv")#
+#
+lrmc = lrmc[,-1]#
+easy = easy[,-1]#
+easier = easier[,-1]#
+length(lrmc)#
+mean(lrmc)#
+hist(lrmc, col = "steelblue1", ylab = "Frequency", xlab = "", main ="")
+<-mean(lrmc[!is.na(lrmc)])#
+std<-sqrt(var(as.vector(lrmc[!is.na(lrmc)])))
+m<-mean(lrmc[!is.na(lrmc)])#
+std<-sqrt(var(as.vector(lrmc[!is.na(lrmc)])))
+m
+std
+m<-mean(lrmc[!is.na(lrmc)])#
+std<-sqrt(var(lrmc[!is.na(lrmc)]))#
+#
+ma = mean(easy[!is.na(easy)])#
+stda<-sqrt(var(easy[!is.na(easy)]))
+stda
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,1), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="khaki4", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,1), ylim=c(0,0.3),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="deepskyblue4", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,1), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="khaki4", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.03), ylim=c(0,1),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="deepskyblue4", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,20), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="khaki4", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,20),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="deepskyblue4", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,12), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="khaki4", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,20),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="deepskyblue4", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,12), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="khaki4", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="deepskyblue4", lwd=1, add=TRUE, yaxt="n")
+## Cross validation using the model: m_{jj} = mu+a_i+b_j#
+## First normalize the matrix, N_{ij} = W_i - a_j - b_j + mu#
+## Perform IFA on  N#
+## Recover W#
+## Use rank-3 matrix, lam = 340#
+rm(list=ls())#
+library(truncnorm)#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)#
+#
+##Cross-validation sampling#
+#
+obsSample = function(m,n){#
+	obs = which(!is.na(m), F)#
+	pos=sample(obs,n, replace=F)#
+	return(pos)#
+}#
+temp = G#
+error = c(1:405)#
+easy = c(1:405)#
+easier = c(1:405)#
+n=10
+x=c(1:1276)#
+	y=c(1:72)#
+	pos=obsSample(temp, n)#
+	validation = temp[pos]#
+	temp[pos]=NA#
+	W=G#
+	W[pos]=NA#
+	for (i in 1:1276){#
+		student = W[i,]#
+		x[i]=mean(student[!is.na(student)])#
+	}#
+	for (j in 1:72){#
+		teacher = W[,j]#
+		y[j] = mean(teacher[!is.na(teacher)])#
+	}#
+	z=mean(W[!is.na(W)])#
+	N = W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			N[i,j]=N[i,j]-x[i]-y[j]+z#
+		}#
+	}#
+	N[is.na(W)] = NA#
+	thresh = function(a, lam){#
+	a = a - lam#
+	a[a<0] = 0#
+	return(a)#
+	}
+lam = 100#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}#
+	prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}#
+#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+rmse
+K=W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			K[i,j]= x[i]+y[j]-z#
+		}#
+	}#
+	easy_recovery = sqrt(sum((G[pos]-K[pos])^2)/n)/mean(G[pos])#
+	easy[l] = easy_recovery#
+#
+	## 1-way anova:#
+	Average = W#
+	Average[is.na(Average)] = z#
+	easier_recovery = sqrt(sum((G[pos]-Average[pos])^2)/n)/mean(G[pos])
+easier_recovery
+easy_recovery = sqrt(sum((G[pos]-K[pos])^2)/n)/mean(G[pos])#
+	easy[l] = easy_recovery
+easier_recovery
+easy_recovery
+## Cross validation using the model: m_{jj} = mu+a_i+b_j#
+## First normalize the matrix, N_{ij} = W_i - a_j - b_j + mu#
+## Perform IFA on  N#
+## Recover W#
+## Use rank-3 matrix, lam = 340#
+## leave 1 out cross-validation#
+rm(list=ls())#
+library(truncnorm)#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)
+length(!is.na(G))
+length(G[!is.na(G)])
+x=c(1:1276)#
+	y=c(1:72)#
+	pos=obsSample(temp, n)#
+	validation = temp[pos]#
+	temp[pos]=NA#
+	W=G#
+	W[pos]=NA#
+	for (i in 1:1276){#
+		student = W[i,]#
+		x[i]=mean(student[!is.na(student)])#
+	}#
+	for (j in 1:72){#
+		teacher = W[,j]#
+		y[j] = mean(teacher[!is.na(teacher)])#
+	}#
+	z=mean(W[!is.na(W)])#
+	N = W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			N[i,j]=N[i,j]-x[i]-y[j]+z#
+		}#
+	}#
+	N[is.na(W)] = NA#
+	thresh = function(a, lam){#
+	a = a - lam#
+	a[a<0] = 0#
+	return(a)#
+	}
+lam = 340#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}
+prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}#
+#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+temp = G#
+error = c(1:405)#
+easy = c(1:405)#
+easier = c(1:405)#
+n=1
+x=c(1:1276)#
+	y=c(1:72)#
+	pos=obsSample(temp, n)#
+	validation = temp[pos]#
+	temp[pos]=NA#
+	W=G#
+	W[pos]=NA#
+	for (i in 1:1276){#
+		student = W[i,]#
+		x[i]=mean(student[!is.na(student)])#
+	}#
+	for (j in 1:72){#
+		teacher = W[,j]#
+		y[j] = mean(teacher[!is.na(teacher)])#
+	}#
+	z=mean(W[!is.na(W)])#
+	N = W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			N[i,j]=N[i,j]-x[i]-y[j]+z#
+		}#
+	}#
+	N[is.na(W)] = NA#
+	thresh = function(a, lam){#
+	a = a - lam#
+	a[a<0] = 0#
+	return(a)#
+	}#
+	lam = 340#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}#
+	prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}#
+#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])#
+	error[l]=rmse#
+	##2-way anova#
+	K=W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			K[i,j]= x[i]+y[j]-z#
+		}#
+	}#
+	easy_recovery = sqrt(sum((G[pos]-K[pos])^2)/n)/mean(G[pos])
+obsSample = function(m,n){#
+	obs = which(!is.na(m), F)#
+	pos=sample(obs,n, replace=F)#
+	return(pos)#
+}#
+temp = G#
+error = c(1:405)#
+easy = c(1:405)#
+easier = c(1:405)#
+n=1
+x=c(1:1276)#
+	y=c(1:72)#
+	pos=obsSample(temp, n)#
+	validation = temp[pos]#
+	temp[pos]=NA#
+	W=G#
+	W[pos]=NA#
+	for (i in 1:1276){#
+		student = W[i,]#
+		x[i]=mean(student[!is.na(student)])#
+	}#
+	for (j in 1:72){#
+		teacher = W[,j]#
+		y[j] = mean(teacher[!is.na(teacher)])#
+	}#
+	z=mean(W[!is.na(W)])#
+	N = W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			N[i,j]=N[i,j]-x[i]-y[j]+z#
+		}#
+	}#
+	N[is.na(W)] = NA#
+	thresh = function(a, lam){#
+	a = a - lam#
+	a[a<0] = 0#
+	return(a)#
+	}#
+	lam = 340#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}#
+	prediction = tmp#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=prediction[i,j]+x[i]+y[j]-z#
+		}#
+	}#
+#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])
+rmse
+K=W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			K[i,j]= x[i]+y[j]-z#
+		}#
+	}#
+	easy_recovery = sqrt(sum((G[pos]-K[pos])^2)/n)/mean(G[pos])
+easy_recover
+easy_recovery
+Average = W#
+	Average[is.na(Average)] = z#
+	easier_recovery = sqrt(sum((G[pos]-Average[pos])^2)/n)/mean(G[pos])
+easier
+easier_recovery
+z
+average
+Average[pos]
+G[pos]
+n
+rm(list=ls())#
+library(truncnorm)#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)#
+#
+thresh = function(a, lam){#
+	a = a - lam#
+	a[a<0] = 0#
+	return(a)#
+}#
+lam = 825#
+lam1 = 800
+obsSample = function(m,n){#
+	obs = which(!is.na(m), F)#
+	pos=sample(obs,n, replace=F)#
+	return(pos)#
+}#
+temp = G#
+error = c(1:405)#
+n=10
+rm(list=ls())#
+library(truncnorm)#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)#
+#
+thresh = function(a, lam){#
+	a = a - lam#
+	a[a<0] = 0#
+	return(a)#
+}#
+lam = 825#
+lam1 = 800#
+#
+##Cross-validation sampling#
+#
+obsSample = function(m,n){#
+	obs = which(!is.na(m), F)#
+	pos=sample(obs,n, replace=F)#
+	return(pos)#
+}#
+temp = G#
+error = c(1:405)#
+n=10
+pos=obsSample(temp, n)#
+	validation = temp[pos]#
+	temp[pos]=NA#
+	##Matrix W is G with observed value in pos replaced by na.#
+	W=G#
+	W[pos]=NA#
+	##Perform IFA on W:#
+	tmp = W#
+	tmp[is.na(W)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(W)] = low[is.na(W)]#
+	}
+s$d
+Wnorm=W#
+	x=mean(tmp)#
+	y=rowMeans(tmp)#
+	z=colMeans(tmp)#
+#
+	for(j in 1:1276){#
+		Wnorm[j,]=Wnorm[j,]-y[j]#
+	}#
+	for(k in 1:72){#
+		Wnorm[,k]=Wnorm[,k]-z[k]#
+	}#
+	Wnorm=Wnorm - x#
+	tmp1 = Wnorm#
+	obs1 = Wnorm[!is.na(Wnorm)]#
+	tmp1[is.na(Wnorm)] = 0
+for( h in 1:5000){#
+ 	 	s1 = svd(tmp1)#
+		s1$d = thresh(s1$d, lam1)#
+		low1 = s1$u%*%diag(s1$d)%*%t(s1$v)#
+ 		tmp1[is.na(Wnorm)] = low1[is.na(Wnorm)]#
+ 	}
+s1$d
+Wnorm=W#
+	x=mean(tmp)#
+	y=rowMeans(tmp)#
+	z=colMeans(tmp)#
+#
+	for(j in 1:1276){#
+		Wnorm[j,]=Wnorm[j,]-y[j]#
+	}#
+	for(k in 1:72){#
+		Wnorm[,k]=Wnorm[,k]-z[k]#
+	}#
+	Wnorm=Wnorm + x#
+	tmp1 = Wnorm#
+	obs1 = Wnorm[!is.na(Wnorm)]#
+	tmp1[is.na(Wnorm)] = 0#
+#
+	for( h in 1:5000){#
+ 	 	s1 = svd(tmp1)#
+		s1$d = thresh(s1$d, lam1)#
+		low1 = s1$u%*%diag(s1$d)%*%t(s1$v)#
+ 		tmp1[is.na(Wnorm)] = low1[is.na(Wnorm)]#
+ 	}
+s1$d
+recover = tmp1#
+ 	for(j in 1:1276){#
+		recover [j,]=recover [j,]+y[j]#
+	}#
+	for(k in 1:72){#
+		recover [,k]=recover [,k] + z[k]#
+	}#
+	recover = recover - x#
+ 	recover[recover>500]=500#
+	recover[recover<100] = 100#
+ 	rmse = sqrt(sum((G[pos]-recover[pos])^2)/n)/mean(G[pos])
+rmse
+recover[pos]
+G[pos]
+library(ggplot2)#
+lrmc= read.csv("rmse-9.csv")#
+easy= read.csv("easy-9.csv")#
+easier= read.csv("easier-9.csv")#
+#
+lrmc = lrmc[,-1]#
+easy = easy[,-1]#
+easier = easier[,-1]#
+length(lrmc)#
+mean(lrmc)
+mean(lrmc[!is.na(lrmc)])
+lrmc= read.csv("rmse-10.csv")
+mean(lrmc[!is.na(lrmc)])
+lrmc = lrmc[,-1]
+mean(lrmc[!is.na(lrmc)])
+lrmc= read.csv("rmse-10.csv")
+lrmc = lrmc[,-1]
+mean(lrmc[!is.na(lrmc)])
+lrmc= read.csv("rmse-9.csv")
+lrmc = lrmc[,-1]
+mean(lrmc[!is.na(lrmc)])
+mean(easy[!is.na(easy)])
+easy = easy[,-1]#
+easier = easier[,-1]#
+length(lrmc)
+asy= read.csv("easy-9.csv")#
+easier= read.csv("easier-9.csv")
+easy = easy[,-1]#
+easier = easier[,-1]
+easy[1:2,]
+easy[1:2]
+ibrary(ggplot2)#
+lrmc= read.csv("rmse-9.csv")#
+easy= read.csv("easy-9.csv")#
+easier= read.csv("easier-9.csv")#
+#
+lrmc = lrmc[,-1]#
+easy = easy[,-1]#
+easier = easier[,-1]#
+length(lrmc)#
+mean(lrmc[!is.na(lrmc)])#
+mean(easy[!is.na(easy)])
+hist(lrmc, col = "steelblue1", ylab = "Frequency", xlab = "", main ="")
+m<-mean(lrmc[!is.na(lrmc)])#
+std<-sqrt(var(lrmc[!is.na(lrmc)]))#
+#
+ma = mean(easy[!is.na(easy)])#
+stda<-sqrt(var(easy[!is.na(easy)]))
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,12), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="khaki4", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="deepskyblue4", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,12), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="khaki4", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="deepskyblue4", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=10,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="deepskyblue4", lwd=1, add=TRUE, yaxt="n")
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=10,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="deepskyblue4", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,12), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="khaki4", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="deepskyblue4", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=10,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="red", lwd=1, add=TRUE, yaxt="n")
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=10,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="deepskyblue4", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=10,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="red", lwd=1, add=TRUE, yaxt="n")
+mb = mean(easier[!is.na(easier)])#
+stdb<-sqrt(var(easier[!is.na(easier)]))
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,12), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="khaki4", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="deepskyblue4", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=10,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="red", lwd=1, add=TRUE, yaxt="n")
+curve(dnorm(x, mean =m, sd = std), col="magenta", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,12), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col=rgb(1,1,0,0.7), lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col=rgb(0,1,1,0.4), lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=10,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col=rgb(0,1,1,0.7), lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=20, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,12), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col=rgb(1,1,0,0.7), lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=20,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col=rgb(0,1,1,0.4), lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=20,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col=rgb(0,1,1,0.7), lwd=1, add=TRUE, yaxt="n")
+## Cross validation using the model: m_{jj} = mu+a_i+b_j#
+rm(list=ls())#
+library(truncnorm)#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)#
+#
+##Cross-validation sampling#
+#
+obsSample = function(m,n){#
+	obs = which(!is.na(m), F)#
+	pos=sample(obs,n, replace=F)#
+	return(pos)#
+}#
+temp = G#
+error = c(1:405)#
+n=10#
+#
+for (l in 1:405){#
+	x=c(1:1276)#
+	y=c(1:72)#
+	pos=obsSample(temp, n)#
+	validation = temp[pos]#
+	temp[pos]=NA#
+	W=G#
+	W[pos]=NA#
+	for (i in 1:1276){#
+		student = W[i,]#
+		x[i]=mean(student[!is.na(student)])#
+	}#
+	for (j in 1:72){#
+		teacher = W[,j]#
+		y[j] = mean(teacher[!is.na(teacher)])#
+	}#
+	z=mean(W[!is.na(W)])#
+	prediction = W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			prediction[i,j]=x[i]+y[j]-z#
+		}#
+	}#
+	rmse = sqrt(sum((G[pos]-prediction[pos])^2)/n)/mean(G[pos])#
+	error[l]=rmse#
+}#
+write.csv(error, "rmse-2.csv")
+mean(error)
+mean(error[!is.na(error)])
+easy= read.csv("rmse-2.csv")
+easy = easy[,-1]
+mean(easy[!is.na(easy)])
+ist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=20, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,12), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col=rgb(1,1,0,0.7), lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=20,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col=rgb(0,1,1,0.4), lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=20,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col=rgb(0,1,1,0.7), lwd=1, add=TRUE, yaxt="n")
+m<-mean(lrmc[!is.na(lrmc)])#
+std<-sqrt(var(lrmc[!is.na(lrmc)]))#
+#
+ma = mean(easy[!is.na(easy)])#
+stda<-sqrt(var(easy[!is.na(easy)]))#
+#
+mb = mean(easier[!is.na(easier)])#
+stdb<-sqrt(var(easier[!is.na(easier)]))
+library(ggplot2)#
+lrmc= read.csv("rmse-9.csv")#
+easy= read.csv("rmse-2.csv")#
+easier= read.csv("easier-9.csv")#
+#
+lrmc = lrmc[,-1]#
+easy = easy[,-1]#
+easier = easier[,-1]#
+length(lrmc)#
+mean(lrmc[!is.na(lrmc)])#
+mean(easy[!is.na(easy)])#
+hist(lrmc, col = "steelblue1", ylab = "Frequency", xlab = "", main ="")#
+#
+m<-mean(lrmc[!is.na(lrmc)])#
+std<-sqrt(var(lrmc[!is.na(lrmc)]))#
+#
+ma = mean(easy[!is.na(easy)])#
+stda<-sqrt(var(easy[!is.na(easy)]))#
+#
+mb = mean(easier[!is.na(easier)])#
+stdb<-sqrt(var(easier[!is.na(easier)]))
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=20, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,12), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col=rgb(1,1,0,0.7), lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=20,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col=rgb(0,1,1,0.4), lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=20,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col=rgb(0,1,1,0.7), lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=20, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,12), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="orange", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=20,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="steelblue1", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=20,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="red", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,12), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="orange", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="steelblue1", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=10,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="red", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,20), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="orange", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=20,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="steelblue1", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,12),breaks=20,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="red", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,20), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="orange", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,20),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="steelblue1", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,20),breaks=10,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="red", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,20), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="orange", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,20),breaks=10,col=rgb(1,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="steelblue1", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,20),breaks=10,col=rgb(1,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="red", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col="gray", xlim=c(0,0.3), ylim=c(0,20), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="orange", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,20),breaks=10,col="gray",main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="steelblue1", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,20),breaks=10,col="gray",main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="red", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,20), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="orange", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,20),breaks=10,col=rgb(1,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="steelblue1", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,20),breaks=10,col=rgb(1,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="red", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="orange", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="steelblue1", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="red", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="chocolate", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="steelblue1", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="red", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="steelblue1", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="red", lwd=1, add=TRUE, yaxt="n")
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="red", lwd=1, add=TRUE, yaxt="n")
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,0,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="red", lwd=1, add=TRUE, yaxt="n")
+ylim=c(0,15),breaks=10,col=rgb(0,0.2,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="red", lwd=1, add=TRUE, yaxt="n")
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,0.2,1,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="red", lwd=1, add=TRUE, yaxt="n")
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="red", lwd=1, add=TRUE, yaxt="n")
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy", lwd=1, add=TRUE, yaxt="n")
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="green", lwd=1, add=TRUE, yaxt="n")
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lwd=1, add=TRUE, yaxt="n")
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")#
+p
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lwd=1, add=TRUE, yaxt="n")
+library(ggplot2)#
+lrmc= read.csv("rmse-9.csv")#
+easy= read.csv("rmse-2.csv")#
+easier= read.csv("easier-9.csv")#
+#
+lrmc = lrmc[,-1]#
+easy = easy[,-1]#
+easier = easier[,-1]#
+length(lrmc)#
+mean(lrmc[!is.na(lrmc)])#
+mean(easy[!is.na(easy)])#
+hist(lrmc, col = "steelblue1", ylab = "Frequency", xlab = "", main ="")#
+#
+m<-mean(lrmc[!is.na(lrmc)])#
+std<-sqrt(var(lrmc[!is.na(lrmc)]))#
+#
+ma = mean(easy[!is.na(easy)])#
+stda<-sqrt(var(easy[!is.na(easy)]))#
+#
+mb = mean(easier[!is.na(easier)])#
+stdb<-sqrt(var(easier[!is.na(easier)]))#
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy", type = "p" lwd=1, add=TRUE, yaxt="n")
+curve(dnorm(x, mean =ma, sd = stda), col="navy", type = "s" lwd=1, add=TRUE, yaxt="n")
+curve(dnorm(x, mean =ma, sd = stda), col="navy", type = "s", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy", lty = "dotted", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lty = "dotted", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = "dash", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lty = "dotted", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = "dashed", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = "dotted", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = "dashed", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = "dotted", lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = "dashed", lwd=1, add=TRUE, yaxt="n")
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(0,1,1,0.4), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = "dotted", lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = "dashed", lwd=1, add=TRUE, yaxt="n")
+legend(2000,9.5, c("IFA","2-way annova", "1-way annova), lty=c(1,"dotted", "dashed"), lwd=c(1, 1, 1),col=c("blue","red", "pink"))
+legend("topright", legend = c("IFA","2-way annova", "1-way annova), lty=c(1,"dotted", "dashed"), lwd=c(1, 1, 1),col=c("blue","red", "pink"))
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(0,1,1,0.4), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = "dotted", lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = "dashed", lwd=1, add=TRUE, yaxt="n")#
+legend("topright", legend = c("IFA", "2-way annova", "1-way annova"), lty = c(1, "dotted", "line"), lwd = c(1,1,1), col = c("blue", "red", "pink"))
+legend("topright", legend = c("IFA", "2-way annova", "1-way annova"), lty = c(1, "dotted", "dashed"), lwd = c(1,1,1), col = c("blue", "red", "pink"))
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(0,1,1,0.4), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lty = 2, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = 4, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = 6, lwd=1, add=TRUE, yaxt="n")#
+legend("topright", legend = c("IFA", "2-way annova", "1-way annova"), lty = c(2, 4, 6), lwd = c(1,1,1), col = c("blue", "red", "pink"))
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(0,1,1,0.4), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lty = 1, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = 4, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = 6, lwd=1, add=TRUE, yaxt="n")#
+legend("topright", legend = c("IFA", "2-way annova", "1-way annova"), lty = c(1, 4, 6), lwd = c(1,1,1), col = c("blue", "red", "pink"))
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(0,1,1,0.4), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lty = 1, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = 4, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = 6, lwd=1, add=TRUE, yaxt="n")#
+legend("topright", legend = c("IFA", "2-way annova", "1-way annova"), lty = c(0, 4, 6), lwd = c(1,1,1), col = c("red", "navy", "darkgreen"))
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(0,1,1,0.4), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lty = 1, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = 4, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = 6, lwd=1, add=TRUE, yaxt="n")#
+legend("topright", legend = c("IFA", "2-way annova", "1-way annova"), lty = c(1, 4, 6), lwd = c(1,1,1), col = c("red", "navy", "darkgreen"))
+hist(lrmc, prob=TRUE, xlab="Error Rate", ylab = "Frequency", breaks=10, col=rgb(0,1,1,0.4), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lty = 1, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = 4, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = 6, lwd=1, add=TRUE, yaxt="n")#
+legend("topright", legend = c("IFA", "2-way annova", "1-way annova"), lty = c(1, 4, 6), lwd = c(1,1,1), col = c("red", "navy", "darkgreen"))
+hist(lrmc, prob=TRUE, xlab="Error Rate", ylab = "Frequency", breaks=10, col=rgb(0,1,1,0.4), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lty = 1, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = 4, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = 6, lwd=1, add=TRUE, yaxt="n")#
+legend("topright", legend = c("IFA", "2-way anova", "1-way anova"), lty = c(1, 4, 6), lwd = c(1,1,1), col = c("red", "navy", "darkgreen"))
+hist(lrmc, prob=TRUE, xlab="Error Rate", ylab = "Frequency", breaks=10, col=rgb(0,1,1,0.4), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lty = 1, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = 4, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = 6, lwd=1, add=TRUE, yaxt="n")#
+legend("topright", legend = c("IFA Model", "Two-way Anova Model, "Mean Model"), lty = c(1, 4, 6), lwd = c(1,1,1), col = c("red", "navy", "darkgreen"))
+hist(lrmc, prob=TRUE, xlab="Error Rate", ylab = "Frequency", breaks=10, col=rgb(0,1,1,0.4), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lty = 1, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = 4, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = 6, lwd=1, add=TRUE, yaxt="n")#
+legend("topright", legend = c("IFA Model", "Two-way Anova Model", "Mean Model"), lty = c(1, 4, 6), lwd = c(1,1,1), col = c("red", "navy", "darkgreen"))
+hist(lrmc, prob=TRUE, xlab="Error Rate", ylab = "Frequency", breaks=20, col=rgb(0,1,1,0.4), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lty = 1, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = 4, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = 6, lwd=1, add=TRUE, yaxt="n")#
+legend("topright", legend = c("IFA Model", "Two-way Anova Model", "Mean Model"), lty = c(1, 4, 6), lwd = c(1,1,1), col = c("red", "navy", "darkgreen"))
+library(ggplot2)#
+lrmc= read.csv("rmse-11.csv")#
+easy= read.csv("rmse-2.csv")#
+easier= read.csv("easier-9.csv")#
+#
+lrmc = lrmc[,-1]#
+easy = easy[,-1]#
+easier = easier[,-1]#
+length(lrmc)#
+mean(lrmc[!is.na(lrmc)])#
+mean(easy[!is.na(easy)])#
+hist(lrmc, col = "steelblue1", ylab = "Frequency", xlab = "", main ="")#
+#
+m<-mean(lrmc[!is.na(lrmc)])#
+std<-sqrt(var(lrmc[!is.na(lrmc)]))#
+#
+ma = mean(easy[!is.na(easy)])#
+stda<-sqrt(var(easy[!is.na(easy)]))#
+#
+mb = mean(easier[!is.na(easier)])#
+stdb<-sqrt(var(easier[!is.na(easier)]))#
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = "dotted", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = "dashed", lwd=1, add=TRUE, yaxt="n")#
+hist(lrmc, prob=TRUE, xlab="Error Rate", ylab = "Frequency", breaks=20, col=rgb(0,1,1,0.4), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lty = 1, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = 4, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = 6, lwd=1, add=TRUE, yaxt="n")#
+legend("topright", legend = c("IFA Model", "Two-way Anova Model", "Mean Model"), lty = c(1, 4, 6), lwd = c(1,1,1), col = c("red", "navy", "darkgreen"))
+## Cross validation using the model: m_{jj} = mu+a_i+b_j#
+## First normalize the matrix, N_{ij} = W_i - a_j - b_j + mu#
+## Perform IFA on  N#
+## Recover W#
+## Use rank-n matrix, lam = 50#
+rm(list=ls())#
+library(truncnorm)#
+x = read.csv("math.csv")#
+x = data.frame(x)#
+x=x[,-1]#
+x=as.matrix(x)#
+#
+# basic graph properties:#
+dim(x)#
+table(rowSums(!is.na(x)))#
+table(colSums(!is.na(x)))#
+mean(rowSums(!is.na(x)))#
+mean(colSums(!is.na(x)))#
+#
+#Drop student with 1 entry#
+B = (!is.na(x))#
+badstu = which(rowSums(B) < 2)#
+badtea = which(colSums(B) < 2)#
+G = x[-badstu, ]#
+G = G[,-badtea]#
+B = B[-badstu,]#
+B = B[,-badtea]#
+dim(G)#
+#
+##Cross-validation sampling#
+#
+obsSample = function(m,n){#
+	obs = which(!is.na(m), F)#
+	pos=sample(obs,n, replace=F)#
+	return(pos)#
+}#
+temp = G#
+error = c(1:405)#
+easy = c(1:405)#
+easier = c(1:405)#
+n=10
+x=c(1:1276)#
+	y=c(1:72)#
+	pos=obsSample(temp, n)#
+	validation = temp[pos]#
+	temp[pos]=NA#
+	W=G#
+	W[pos]=NA#
+	for (i in 1:1276){#
+		student = W[i,]#
+		x[i]=mean(student[!is.na(student)])#
+	}#
+	for (j in 1:72){#
+		teacher = W[,j]#
+		y[j] = mean(teacher[!is.na(teacher)])#
+	}#
+	z=mean(W[!is.na(W)])#
+	N = W#
+	for (i in 1:1276){#
+		for (j in 1:72){#
+			N[i,j]=N[i,j]-x[i]-y[j]+z#
+		}#
+	}#
+	N[is.na(W)] = NA#
+	thresh = function(a, lam){#
+	a = a - lam#
+	a[a<0] = 0#
+	return(a)#
+	}
+lam = 50#
+	tmp = N#
+	tmp[is.na(N)] = 0#
+	for( i in 1:5000){#
+  		s = svd(tmp)#
+  		s$d = thresh(s$d, lam)#
+  		low = s$u%*%diag(s$d)%*%t(s$v)#
+  		tmp[is.na(N)] = low[is.na(N)]#
+	}
+s$d
+library(ggplot2)#
+lrmc= read.csv("rmse-9.csv")#
+easy= read.csv("rmse-9.csv")#
+easier= read.csv("easier-9.csv")#
+#
+lrmc = lrmc[,-1]#
+easy = easy[,-1]#
+easier = easier[,-1]#
+length(lrmc)#
+mean(lrmc[!is.na(lrmc)])#
+mean(easy[!is.na(easy)])#
+hist(lrmc, col = "steelblue1", ylab = "Frequency", xlab = "", main ="")#
+#
+m<-mean(lrmc[!is.na(lrmc)])#
+std<-sqrt(var(lrmc[!is.na(lrmc)]))#
+#
+ma = mean(easy[!is.na(easy)])#
+stda<-sqrt(var(easy[!is.na(easy)]))#
+#
+mb = mean(easier[!is.na(easier)])#
+stdb<-sqrt(var(easier[!is.na(easier)]))#
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = "dotted", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = "dashed", lwd=1, add=TRUE, yaxt="n")#
+hist(lrmc, prob=TRUE, xlab="Error Rate", ylab = "Frequency", breaks=20, col=rgb(0,1,1,0.4), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lty = 1, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = 4, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = 6, lwd=1, add=TRUE, yaxt="n")#
+legend("topright", legend = c("IFA Model", "Two-way Anova Model", "Mean Model"), lty = c(1, 4, 6), lwd = c(1,1,1), col = c("red", "navy", "darkgreen"))
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = "dotted", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = "dashed", lwd=1, add=TRUE, yaxt="n")
+library(ggplot2)#
+lrmc= read.csv("rmse-9.csv")#
+easy= read.csv("easy-9.csv")#
+easier= read.csv("easier-9.csv")#
+#
+lrmc = lrmc[,-1]#
+easy = easy[,-1]#
+easier = easier[,-1]#
+length(lrmc)#
+mean(lrmc[!is.na(lrmc)])#
+mean(easy[!is.na(easy)])#
+hist(lrmc, col = "steelblue1", ylab = "Frequency", xlab = "", main ="")#
+#
+m<-mean(lrmc[!is.na(lrmc)])#
+std<-sqrt(var(lrmc[!is.na(lrmc)]))#
+#
+ma = mean(easy[!is.na(easy)])#
+stda<-sqrt(var(easy[!is.na(easy)]))#
+#
+mb = mean(easier[!is.na(easier)])#
+stdb<-sqrt(var(easier[!is.na(easier)]))#
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = "dotted", lwd=1, add=TRUE, yaxt="n")#
+par(new=TRUE)#
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,0,0.7),main="",xlab="",ylab="")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = "dashed", lwd=1, add=TRUE, yaxt="n")#
+hist(lrmc, prob=TRUE, xlab="Error Rate", ylab = "Frequency", breaks=20, col=rgb(0,1,1,0.4), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")#
+curve(dnorm(x, mean =m, sd = std), col="red", lty = 1, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = 4, lwd=1, add=TRUE, yaxt="n")#
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = 6, lwd=1, add=TRUE, yaxt="n")#
+legend("topright", legend = c("IFA Model", "Two-way Anova Model", "Mean Model"), lty = c(1, 4, 6), lwd = c(1,1,1), col = c("red", "navy", "darkgreen"))
+t.test(lrmc,easy,paired=TRUE)
+t.test(lrmc,easy,paired=TRUE, var.equal = TRUE)

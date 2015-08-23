@@ -1,0 +1,40 @@
+library(ggplot2)
+lrmc= read.csv("rmse-9.csv")
+easy= read.csv("easy-9.csv")
+easier= read.csv("easier-9.csv")
+
+lrmc = lrmc[,-1]
+easy = easy[,-1]
+easier = easier[,-1]
+length(lrmc)
+mean(lrmc[!is.na(lrmc)])
+mean(easy[!is.na(easy)])
+hist(lrmc, col = "steelblue1", ylab = "Frequency", xlab = "", main ="")
+
+m<-mean(lrmc[!is.na(lrmc)])
+std<-sqrt(var(lrmc[!is.na(lrmc)]))
+
+ma = mean(easy[!is.na(easy)])
+stda<-sqrt(var(easy[!is.na(easy)]))
+
+mb = mean(easier[!is.na(easier)])
+stdb<-sqrt(var(easier[!is.na(easier)]))
+
+
+hist(lrmc, prob=TRUE, xlab="Interaction Score", ylab = "Frequency", breaks=10, col=rgb(1,1,0,0.7), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")
+curve(dnorm(x, mean =m, sd = std), col="red", lwd=1, add=TRUE, yaxt="n")
+par(new=TRUE)
+hist(easy, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = "dotted", lwd=1, add=TRUE, yaxt="n")
+par(new=TRUE)
+hist(easier, prob=TRUE, xlim=c(0,0.3), ylim=c(0,15),breaks=10,col=rgb(0,1,0,0.7),main="",xlab="",ylab="")
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = "dashed", lwd=1, add=TRUE, yaxt="n")
+
+
+hist(lrmc, prob=TRUE, xlab="Error Rate", ylab = "Frequency", breaks=20, col=rgb(0,1,1,0.4), xlim=c(0,0.3), ylim=c(0,15), main="Error Rate in Estimation of the Student-Teacher Interaction")
+curve(dnorm(x, mean =m, sd = std), col="red", lty = 1, lwd=1, add=TRUE, yaxt="n")
+curve(dnorm(x, mean =ma, sd = stda), col="navy",lty = 4, lwd=1, add=TRUE, yaxt="n")
+curve(dnorm(x, mean =mb, sd = stdb), col="darkgreen", lty = 6, lwd=1, add=TRUE, yaxt="n")
+legend("topright", legend = c("IFA Model", "Two-way Anova Model", "Mean Model"), lty = c(1, 4, 6), lwd = c(1,1,1), col = c("red", "navy", "darkgreen"))
+
+ t.test(lrmc,easy,paired=TRUE, var.equal = TRUE)
