@@ -1,0 +1,108 @@
+
+R version 3.1.1 (2014-07-10) -- "Sock it to Me"
+Copyright (C) 2014 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin13.1.0 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[R.app GUI 1.65 (6784) x86_64-apple-darwin13.1.0]
+
+[History restored from /Users/lehathu/.Rapp.history]
+
+> lunch=read.csv("Lunch_Rsquare.csv")
+> lunch = lunch[,-1]
+> length(lunch[lunch>0.03753553])
+[1] 0
+> 
+> lunch1=read.csv("Lunch_Rsquare1.csv")
+> lunch1 = lunch1[,-1]
+> length(lunch1[lunch1>0.0371239])
+[1] 0
+> 
+> homeless=read.csv("Homeless_Rsquare.csv")
+> homeless=homeless[,-1]
+> length(homeless[homeless>0.03571468])
+[1] 5
+> 
+> homeless1=read.csv("Homeless_Rsquare1.csv")
+> homeless1=homeless1[,-1]
+> length(homeless1[homeless1>0.03302692])
+[1] 7
+> 
+> 
+> gender=read.csv("Gender_Rsquare.csv")
+> gender=gender[,-1]
+> length(gender[gender>0.006543204])
+[1] 24
+> 
+> gender1=read.csv("Gender_Rsquare1.csv")
+> gender1=gender1[,-1]
+> length(gender1[gender1>0.009287218])
+[1] 0
+> 
+> race=read.csv("Race_Rsquare.csv")
+> race=race[,-1]
+> length(race[race>0.0215214])
+[1] 15
+> 
+> race1=read.csv("Race_Rsquare1.csv")
+> race1=race1[,-1]
+> length(race1[race1> 0.01746721])
+[1] 26
+> 
+> country=read.csv("Country_Rsquare.csv")
+> country=country[,-1]
+> length(country[country>0.1046887])
+[1] 3
+> 
+> country1=read.csv("Country_Rsquare1.csv")
+> country1=country1[,-1]
+> length(country1[country1> 0.1561849])
+[1] 1
+> 
+> language=read.csv("Language_Rsquare.csv")
+> language=language[,-1]
+> length(language[language>0.04625235])
+[1] 73
+> 
+> language1=read.csv("Language_Rsquare1.csv")
+> language1=language1[,-1]
+> length(language1[language1>0.05316651])
+[1] 47
+> 
+> birth_country=read.csv("Birth_Country_Rsquare.csv")
+> birth_country=birth_country[,-1]
+> length(birth_country[birth_country>0.1046887])
+[1] 3
+> 
+> birth_country1=read.csv("Birth_Country_Rsquare1.csv")
+> birth_country1=birth_country1[,-1]
+> length(birth_country1[birth_country1>0.1561849])
+[1] 1
+> 
+> parent_language=read.csv("Parent_Language_Rsquare.csv")
+> parent_language=parent_language[,-1]
+> length(parent_language[parent_language>0.04327742])
+[1] 56
+> 
+> parent_language1=read.csv("Parent_Language_Rsquare1.csv")
+> parent_language1=parent_language1[,-1]
+> length(parent_language1[parent_language1>0.04866746])
+[1] 35
+> 
+> 
+> 
+2015-06-04 15:50:05.881 R[1388:221933] *** WARNING: Method convertPointFromBase: in class NSView is deprecated on 10.7 and later. It should not be used in new applications. 
+> ]
