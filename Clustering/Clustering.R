@@ -4,7 +4,7 @@ library(Matrix)
 library(biganalytics)
 library(ggplot2)
 
-
+# By Norbert Binkiewicz
 #' Performs spectral clustering on an adjacency matrix.
 #'
 #' @param adjMat A graph adjacency matrix.
@@ -177,6 +177,7 @@ p1 = ggplot(df, aes(i, j, fill = x)) +
 }
 
 
+# Clustering by Thu Le
 
 x = read.csv("~/Desktop/Latent_Factors/Data/math.csv")
 x = data.frame(x)
